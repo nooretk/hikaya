@@ -6,7 +6,7 @@
 - Web Frontend: Amra Sawalha
 - Backend & Database: Noureddin Etkaidek, Doaa Hatu
 - AI / Smart Features: Arwa Al-Hajahja, Hussein Jaradat
-- Content / QA / Documentation: Tamara Hamdan
+- Content / Documentation: Tamara Hamdan
 
 ## Notes
 

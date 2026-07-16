@@ -3,115 +3,126 @@
 ## Main Tables
 
 ### users
-**Primary Key:** id
 
-Attributes:
-- id
-- full_name
-- email
-- password_hash
-- role
-- created_at
-- updated_at
+**Primary Key:** `id`
+
+**Attributes:**
+- `id`
+- `full_name`
+- `email`
+- `password_hash`
+- `role`
+- `created_at`
+- `updated_at`
 
 ---
 
 ### locations
-**Primary Key:** id
 
-Attributes:
-- id
-- name
-- city
-- country
-- latitude
-- longitude
-- description
-- created_at
-- updated_at
+**Primary Key:** `id`
+
+**Attributes:**
+- `id`
+- `name`
+- `city`
+- `country`
+- `latitude`
+- `longitude`
+- `description`
+- `created_at`
+- `updated_at`
 
 ---
 
 ### stories
-**Primary Key:** id
 
-**Foreign Key:** location_id → locations.id
+**Primary Key:** `id`
 
-Attributes:
-- id
-- location_id
-- title
-- original_content
-- simplified_story
-- source
-- status
-- created_at
-- updated_at
+**Foreign Keys:**
+- `location_id` → `locations.id`
+- `author_id` → `users.id`
+
+**Attributes:**
+- `id`
+- `location_id`
+- `author_id`
+- `title`
+- `original_content`
+- `simplified_story`
+- `source`
+- `status`
+- `created_at`
+- `updated_at`
 
 ---
 
 ### media
-**Primary Key:** id
 
-**Foreign Key:** location_id → locations.id
+**Primary Key:** `id`
 
-Attributes:
-- id
-- location_id
-- type
-- url
-- description
-- uploaded_at
+**Foreign Key:**
+- `location_id` → `locations.id`
+
+**Attributes:**
+- `id`
+- `location_id`
+- `type`
+- `url`
+- `description`
+- `uploaded_at`
 
 ---
 
 ### contributions
-**Primary Key:** id
+
+**Primary Key:** `id`
 
 **Foreign Keys:**
-- user_id → users.id
-- location_id → locations.id
+- `user_id` → `users.id`
+- `location_id` → `locations.id`
 
-Attributes:
-- id
-- user_id
-- location_id
-- content
-- media_url
-- status
-- submitted_at
+**Attributes:**
+- `id`
+- `user_id`
+- `location_id`
+- `content`
+- `media_url`
+- `status`
+- `submitted_at`
 
 ---
 
 ### categories
-**Primary Key:** id
 
-Attributes:
-- id
-- name
-- description
+**Primary Key:** `id`
+
+**Attributes:**
+- `id`
+- `name`
+- `description`
 
 ---
 
 ### location_categories
 
-**Primary Key:** (location_id, category_id)
+**Primary Key:** (`location_id`, `category_id`)
 
 **Foreign Keys:**
-- location_id → locations.id
-- category_id → categories.id
+- `location_id` → `locations.id`
+- `category_id` → `categories.id`
 
-Attributes:
-- location_id
-- category_id
+**Attributes:**
+- `location_id`
+- `category_id`
 
 ---
 
 # Relationships
 
+- One **User** can create many **Stories**.
+- One **User** can submit many **Contributions**.
 - One **Location** can have many **Stories**.
 - One **Location** can have many **Media** items.
 - One **Location** can receive many **User Contributions**.
-- One **User** can submit many **Contributions**.
 - A **Location** can belong to multiple **Categories**.
 - A **Category** can include multiple **Locations**.

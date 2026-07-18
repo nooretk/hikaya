@@ -1,18 +1,20 @@
-# Frontend Module
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
+</div>
 
-## Purpose
+# Run and deploy your AI Studio app
 
-The frontend will provide the user interface for exploring Palestinian heritage locations and interacting with stories.
+This contains everything you need to run your app locally.
 
-## Planned Pages
+View your app in AI Studio: https://ai.studio/apps/75ee52e9-ad25-4bb3-b343-3a1edf3ad231
 
-- Home page
-- Interactive map page
-- Location details page
-- AI story view
-- User contribution form
-- Admin/review page if time allows
+## Run Locally
 
-## Current Status
+**Prerequisites:**  Node.js
 
-Frontend implementation has not started yet. The first task is to prepare wireframes and decide the main user journey.
+
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

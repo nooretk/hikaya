@@ -1,20 +1,29 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Hikaya – AI-Powered Platform for Preserving Palestinian Memory and Heritage
 
-# Run and deploy your AI Studio app
+Hikaya is an AI-powered interactive storytelling platform designed to preserve Palestinian memory, culture, oral history, and heritage through maps, multimedia content, and AI-assisted storytelling.
 
-This contains everything you need to run your app locally.
+## Main Idea
 
-View your app in AI Studio: https://ai.studio/apps/75ee52e9-ad25-4bb3-b343-3a1edf3ad231
+The platform allows users to explore historical and cultural locations across Palestine through an interactive map. When a user selects a location, Hikaya displays a simplified story, images, audio narration, and related memories or user-contributed stories.
 
-## Run Locally
+## MVP Features
 
-**Prerequisites:**  Node.js
+- Interactive map for selected Palestinian locations
+- Location details page
+- AI-generated simplified story
+- AI Heritage Guide using reviewed content
+- User contribution form
+- Basic content review workflow
+- Sample heritage content for selected locations
 
+## Technology Stack
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- Frontend: React.js or Next.js
+- Backend: FastAPI or NestJS
+- Database: PostgreSQL
+- AI Module: Python-based narrative generation and content simplification
+- Maps: Google Maps API or open-source map alternative
+
+## Current Status
+
+The project is currently in the planning and setup phase. The team is finalizing the MVP scope, setting up the repository, preparing initial documentation, and organizing tasks before starting technical implementation.

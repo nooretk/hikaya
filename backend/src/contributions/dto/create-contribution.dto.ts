@@ -1,33 +1,46 @@
 import {
+  IsEmail,
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsEmail,
   IsUrl,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
 
 /**
  * CreateContributionDto
  *
- * Payload for a user submitting a memory/story/photo contribution
- * for a given location. TODO: align with the final `contributions`
- * table once the database schema is implemented.
+ * Payload for the public contribution form: a memory, story or photo tied to a
+ * location. Field names and limits follow the `contributions` table in
+ * database/schema.sql.
+ *
+ * No account is required, so `contributorName` and `contributorEmail` are the
+ * only identity fields, and both are optional.
  */
 export class CreateContributionDto {
+  /** Location slug, e.g. 'jerusalem'. Must be an existing location. */
   @IsString()
   @IsNotEmpty()
   locationId: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   title: string;
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(20, {
+    message:
+      'content is too short - please share at least a couple of sentences',
+  })
+  @MaxLength(10000)
   content: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(120)
   contributorName?: string;
 
   @IsOptional()
@@ -37,4 +50,8 @@ export class CreateContributionDto {
   @IsOptional()
   @IsUrl()
   mediaUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
 }

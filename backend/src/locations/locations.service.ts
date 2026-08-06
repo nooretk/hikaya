@@ -1,25 +1,30 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Location } from './entities/location.entity';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Location } from '../database/entities/location.entity';
+import type { LocationsRepository } from '../database/repositories/locations.repository';
+import { LOCATIONS_REPOSITORY } from '../database/repositories/tokens';
 
 /**
  * LocationsService
  *
- * Skeleton service for MVP location retrieval.
- * TODO: Replace in-memory placeholder with real database access
- * (PostgreSQL, following database/schema-draft.md) once the
- * persistence layer is wired up.
+ * Serves the heritage locations shown on the map. The repository behind it is
+ * either PostgreSQL or the in-memory seed, decided at boot in DatabaseModule.
  */
 @Injectable()
 export class LocationsService {
+  constructor(
+    @Inject(LOCATIONS_REPOSITORY)
+    private readonly locations: LocationsRepository,
+  ) {}
+
   findAll(): Promise<Location[]> {
-    // TODO: fetch from the `locations` table
-    return Promise.resolve([]);
+    return this.locations.findAll();
   }
 
-  findOne(id: string): Promise<Location> {
-    // TODO: fetch a single location by id from the database
-    return Promise.reject(
-      new NotFoundException(`Location with id "${id}" not found`),
-    );
+  async findOne(id: string): Promise<Location> {
+    const location = await this.locations.findById(id);
+    if (!location) {
+      throw new NotFoundException(`Location with id "${id}" not found`);
+    }
+    return location;
   }
 }

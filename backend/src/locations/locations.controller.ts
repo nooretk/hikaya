@@ -1,12 +1,12 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { LocationsService } from './locations.service';
-import { Location } from './entities/location.entity';
+import { Location } from '../database/entities/location.entity';
 
 /**
- * Locations endpoints (MVP skeleton).
+ * Locations endpoints.
  *
- * GET /api/v1/locations       -> list all locations for the interactive map
- * GET /api/v1/locations/:id   -> retrieve details for a single location
+ * GET /api/v1/locations       -> all published locations, for the map
+ * GET /api/v1/locations/:id   -> one location by slug ('jerusalem', ...)
  */
 @Controller('locations')
 export class LocationsController {

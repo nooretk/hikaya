@@ -1,0 +1,35 @@
+{
+  "request": {
+    "location_id": "jerusalem",
+    "target_audience": "student",
+    "language": "en",
+    "tone": "storytelling",
+    "is_reviewed": true
+  },
+  "response": {
+    "status": "ok",
+    "title": "Old City of Jerusalem: a short history",
+    "summary": "The Old City of Jerusalem is one of the oldest continuously inhabited cities in the world.",
+    "narrative": "The Old City of Jerusalem is one of the oldest continuously inhabited cities in the world. It sits at the heart of Jerusalem and covers roughly 0.9 square kilometres, yet it contains a very large number of religious and historical sites. It is surrounded by stone walls built in the 16th century CE under the Ottoman Sultan Suleiman the Magnificent, with eight main gates. The Old City is divided into four quarters - Muslim, Christian, Armenian and Jewish - and is a spiritual and cultural centre for millions of people worldwide.\n\nCanaanite era (from the Early Bronze Age, 4,000+ years ago): The Canaanites are believed to have founded the city, known as Urusalim / Urshalem. The name is thought to derive from the Canaanite deity \"Shalem\". They built defences and water systems; the Gihon Spring was the main water source.\nAncient Israelite era (c. 1000 BCE): According to accounts in the Old Testament, Jerusalem became the capital under King David, and his son Solomon built the First Temple.\n586 BCE: The Babylonian king Nebuchadnezzar II attacked the city, destroyed the First Temple, and deported a large part of the population (the Babylonian Exile).\nPersian era (from 539 BCE): Cyrus the Great took Babylon and permitted the return to Jerusalem and the rebuilding of the Temple; the Second Temple was built around 516 BCE.\nHellenistic era (from 332 BCE): Alexander the Great conquered the region; control passed between the Ptolemies and the Seleucids. Attempts to impose Greek culture led to the Maccabean revolt in the 2nd century BCE and a period of Hasmonean independence.\nRoman era (from 63 BCE): Pompey entered Jerusalem. Under Herod the Great the city saw major construction and the Second Temple was expanded. In 70 CE, after the First Jewish Revolt, Titus besieged the city and destroyed the Second Temple; part of the retaining wall survives and is known as al-Buraq Wall (the Western Wall).",
+    "target_audience": "student",
+    "language": "en",
+    "tone": "storytelling",
+    "word_count": 318,
+    "uncertainty_notes": [
+      "Gaps the AI must not fill: exact founding date, population figures, and the precise dating of individual gates are not established in the source. If a request needs them, the AI must return an uncertainty note instead of guessing."
+    ],
+    "warnings": [],
+    "source": {
+      "location_id": "jerusalem",
+      "location_name": "Old City of Jerusalem",
+      "content_file": "content/oldCity.md",
+      "summary_file": "content/ai-ready/old-city-jerusalem-summary.md",
+      "provided_inline": false
+    },
+    "model": {
+      "provider": "offline-extractive",
+      "name": "hikaya-extractive-v1"
+    },
+    "error": null
+  }
+}

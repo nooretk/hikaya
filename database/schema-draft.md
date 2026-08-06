@@ -1,5 +1,11 @@
 # Database Schema Draft
 
+> **Status:** this is the Sprint 1 design draft. It was implemented in Sprint 2 as
+> [`schema.sql`](schema.sql), with seed data in [`seed.sql`](seed.sql). The
+> implementation follows this draft and adds review-status columns, media licensing
+> fields, AI uncertainty notes, indexes and `updated_at` triggers — see
+> [`README.md`](README.md) for the differences.
+
 ## Main Tables
 
 ### users

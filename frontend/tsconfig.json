@@ -21,6 +21,8 @@
       ]
     },
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    // Provides the import.meta.env typings used by src/services/api.ts.
+    "types": ["vite/client", "node"]
   }
 }

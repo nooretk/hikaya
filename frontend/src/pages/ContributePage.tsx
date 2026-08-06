@@ -1,0 +1,42 @@
+import React from "react";
+import { useSearchParams } from "react-router-dom";
+import { useLocations } from "../hooks/useLocations";
+import { ContributionForm } from "../components/ContributionForm";
+import { DataSourceBanner } from "../components/DataSourceBanner";
+
+/**
+ * Contribution page.
+ *
+ * `?location=<slug>` preselects a location, which is how the "Add yours" link
+ * on a location page arrives here.
+ */
+export const ContributePage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const { locations, loading, source, reason } = useLocations();
+
+  return (
+    <div className="space-y-8 max-w-3xl">
+      <DataSourceBanner source={source} reason={reason} />
+
+      <div>
+        <h1 className="font-serif font-black text-3xl text-brand-olive">
+          Share a memory
+        </h1>
+        <p className="text-sm text-brand-text leading-relaxed mt-2">
+          Hikaya is not only a record of buildings and dates. A street you walked, a
+          shop that closed, something your grandmother said — that is heritage too, and
+          it is the part that disappears first if nobody writes it down.
+        </p>
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-brand-muted font-serif italic">Loading the form…</p>
+      ) : (
+        <ContributionForm
+          locations={locations}
+          defaultLocationId={searchParams.get("location") ?? undefined}
+        />
+      )}
+    </div>
+  );
+};

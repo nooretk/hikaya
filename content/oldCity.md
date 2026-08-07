@@ -310,8 +310,61 @@ ________________________________________
 7.	Karen Armstrong, Jerusalem: One City, Three Faiths. 
 8.	Simon Sebag Montefiore, Jerusalem: The Biography. 
 9.	Vincent Lemire, Jerusalem: History of a Global City. 
-10.	ICOMOS – International Council on Monuments and Sites. 
+10.	ICOMOS – International Council on Monuments and Sites.
 
 
+________________________________________
 
+## المصادر والوسائط (مُحدَّث — Sprint 2) / Sources & Media (updated — Sprint 2)
 
+### 1. تصنيف المحتوى / How to read this file
+
+يُقسَّم محتوى هذا الملف إلى ثلاث فئات، ويجب على وحدة الذكاء الاصطناعي عدم الخلط بينها:
+
+| الفئة / Category | التعريف / Definition | كيف يتعامل معها الذكاء الاصطناعي |
+|---|---|---|
+| **حقائق تاريخية / Historical facts** | معلومات مدعومة بمصادر أكاديمية أو أثرية موثقة (تواريخ، أبنية، حكّام، قوائم اليونسكو). | يجوز تبسيطها وإعادة صياغتها فقط. |
+| **تقاليد دينية / Religious traditions** | روايات مرتبطة بعقيدة أو تقليد ديني ("وفقًا للتقليد المسيحي"، "وفقًا للعقيدة الإسلامية"). | يجب تقديمها دائمًا منسوبة إلى التقليد، لا كحقيقة مثبتة. |
+| **حكايات شعبية وتراث شفهي / Oral heritage** | روايات متوارثة بين الأهالي وغير مثبتة تاريخيًا. | يجب تقديمها بوصفها تراثًا شفهيًا، مع ذكر أنها غير مؤكدة. |
+
+الملخّص المُهيّأ للذكاء الاصطناعي لهذا الموقع، والذي يفصل هذه الفئات في أقسام مستقلة، موجود في:
+`content/ai-ready/old-city-jerusalem-summary.md`
+
+### 2. روابط مباشرة للمراجع / Direct reference links
+
+| المرجع / Reference | الرابط / Link | النوع / Type |
+|---|---|---|
+| UNESCO World Heritage Centre — Old City of Jerusalem and its Walls | <https://whc.unesco.org/en/list/148/> | صفحة الموقع الرسمية |
+| UNESCO — List of World Heritage in Danger | <https://whc.unesco.org/en/danger/> | قائمة رسمية |
+| Encyclopaedia Britannica — Jerusalem | <https://www.britannica.com/place/Jerusalem> | موسوعة |
+| وزارة السياحة والآثار الفلسطينية | <https://www.mota.gov.ps/> | جهة رسمية |
+| Library of Congress | <https://www.loc.gov/> | أرشيف وثائقي |
+| World Monuments Fund | <https://www.wmf.org/> | مؤسسة حفاظ |
+| ICOMOS | <https://www.icomos.org/> | مجلس دولي للمعالم |
+| Oxford Reference | <https://www.oxfordreference.com/> | مرجع أكاديمي |
+
+**مراجع كتب (بدون روابط مباشرة):** Karen Armstrong, *Jerusalem: One City, Three Faiths*؛
+Simon Sebag Montefiore, *Jerusalem: The Biography*؛ Vincent Lemire, *Jerusalem: History of a Global City*.
+
+### 3. مراجع الوسائط / Media references
+
+| الوسيط / Asset | الرابط / Link | الرخصة / License |
+|---|---|---|
+| مجموعة صور البلدة القديمة | <https://commons.wikimedia.org/wiki/Category:Old_City_of_Jerusalem> | Wikimedia Commons (تختلف حسب الملف) |
+| صور قبة الصخرة | <https://commons.wikimedia.org/wiki/Category:Dome_of_the_Rock> | Wikimedia Commons |
+| صور المسجد الأقصى | <https://commons.wikimedia.org/wiki/Category:Al-Aqsa_Mosque> | Wikimedia Commons |
+| صور كنيسة القيامة | <https://commons.wikimedia.org/wiki/Category:Church_of_the_Holy_Sepulchre> | Wikimedia Commons |
+| صور باب العامود | <https://commons.wikimedia.org/wiki/Category:Damascus_Gate> | Wikimedia Commons |
+| معرض صور اليونسكو للموقع | <https://whc.unesco.org/en/list/148/gallery/> | UNESCO |
+
+> **ملاحظة حول الوسائط:** لا يخزّن هذا المستودع أي ملفات صور أو صوت. تُشار الوسائط عبر روابط
+> خارجية فقط، مع تفضيل المصادر ذات الرخص الواضحة (Wikimedia Commons) أو المؤسسات الرسمية.
+> عند إضافة أي وسائط جديدة يجب تسجيل: المصدر، الرخصة، وتاريخ الوصول.
+
+### 4. ملاحظات المصدر / Source notes
+
+- **مستوى المراجعة:** روجعت المادة من فريق توثيق المحتوى واعتُمدت لاستخدام وحدة الذكاء الاصطناعي.
+- **الفجوات المعروفة:** لا يحدد المصدر تاريخ التأسيس الدقيق، ولا أعداد السكان الحالية، ولا التأريخ
+  الدقيق لكل باب من أبواب السور. على وحدة الذكاء الاصطناعي إعادة `uncertainty_note` بدل التخمين.
+- **تعارضات محتملة:** تختلف التسميات بين التراث الإسلامي واليهودي (حائط البراق / الحائط الغربي)؛
+  يُذكر الاسمان معًا عند الحديث عن الموقع.

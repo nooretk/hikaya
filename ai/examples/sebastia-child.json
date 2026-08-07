@@ -1,0 +1,36 @@
+{
+  "request": {
+    "location_id": "sebastia",
+    "target_audience": "child",
+    "language": "en",
+    "tone": "emotional",
+    "is_reviewed": true
+  },
+  "response": {
+    "status": "ok",
+    "title": "The story of Sebastia",
+    "summary": "Sebastia is one of the most important archaeological and historical sites in Palestine.",
+    "narrative": "Sebastia is one of the most important archaeological and historical sites in Palestine. It is bordered by Nablus to the south-east, Jenin to the north, and the villages of Zawata, al-Naqura and Burqa.\n\nThings to look for:\n- The Roman colonnaded street - the best-known monument at the site; a long street flanked by two rows of massive stone columns that carried porticoes used by merchants and passers-by. It was the city's commercial and administrative centre.\n- The Roman theatre - on the eastern side of the city, built in the Roman period for performances, celebrations and public assemblies; semi-circular with stone seating.\n- The Temple of Augustus - built by Herod the Great in honour of Augustus; one of the largest temples in the region, now surviving only as foundations and some columns.\n\nA few facts:\n- About 12 km north-west of Nablus.\n- Situated on a hill roughly 440 m above sea level.\n- Was the capital of the northern Kingdom of Israel in the 9th century BCE.",
+    "target_audience": "child",
+    "language": "en",
+    "tone": "emotional",
+    "word_count": 170,
+    "uncertainty_notes": [
+      "Gaps the AI must not fill: exact dimensions of the colonnaded street, the seating capacity of the theatre, current population figures, and the precise dating of individual tombs are not established in the source. If a request needs them, the AI must return an uncertainty note instead of guessing.",
+      "Periods describing sieges, destruction or war were left out of the child-friendly version; they are present in the reviewed source."
+    ],
+    "warnings": [],
+    "source": {
+      "location_id": "sebastia",
+      "location_name": "Sebastia",
+      "content_file": "content/sebastia.md",
+      "summary_file": "content/ai-ready/sebastia-summary.md",
+      "provided_inline": false
+    },
+    "model": {
+      "provider": "offline-extractive",
+      "name": "hikaya-extractive-v1"
+    },
+    "error": null
+  }
+}

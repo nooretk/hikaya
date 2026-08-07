@@ -1,30 +1,73 @@
-import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  ValidateIf,
+} from 'class-validator';
+
+export const AUDIENCES = [
+  'student',
+  'tourist',
+  'child',
+  'short',
+  'general',
+] as const;
+export const TONES = [
+  'neutral',
+  'educational',
+  'emotional',
+  'storytelling',
+] as const;
 
 /**
  * GenerateStoryDto
  *
- * Request payload sent from the backend to the AI narrative-generation
- * module. Field names are aligned with the AI-backend JSON contract
- * defined by the AI Smart Features Team (see ai/ folder).
+ * Request from the frontend for an AI-generated narrative. Mirrors the input
+ * side of ai/api-contract.md.
+ *
+ * Normally only `locationId` is sent: the AI module loads the reviewed summary
+ * itself from content/ai-ready/, so a 20 KB document does not travel on every
+ * request. `historicalText` is the escape hatch for reviewed content that is not
+ * yet in the repository.
  */
 export class GenerateStoryDto {
-  @IsString()
-  @IsNotEmpty()
-  locationName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  historicalText: string;
+  @ValidateIf((dto: GenerateStoryDto) => !dto.historicalText)
+  @IsString({ message: 'either locationId or historicalText is required' })
+  locationId?: string;
 
   @IsOptional()
   @IsString()
-  targetAudience?: string;
+  @MaxLength(60000)
+  historicalText?: string;
+
+  @IsOptional()
+  @IsIn(AUDIENCES)
+  targetAudience?: (typeof AUDIENCES)[number];
 
   @IsOptional()
   @IsString()
   language?: string;
 
   @IsOptional()
-  @IsIn(['neutral', 'educational', 'emotional', 'storytelling'])
-  tone?: string;
+  @IsIn(TONES)
+  tone?: (typeof TONES)[number];
+
+  @IsOptional()
+  @IsInt()
+  @Min(40)
+  @Max(600)
+  maxWords?: number;
+
+  /**
+   * Whether to store the generated narrative as a story awaiting review.
+   * Defaults to true; the frontend sets it to false for throwaway previews.
+   */
+  @IsOptional()
+  @IsBoolean()
+  persist?: boolean;
 }

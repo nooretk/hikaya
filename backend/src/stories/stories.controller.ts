@@ -1,24 +1,35 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { StoriesService } from './stories.service';
-import { Story } from './entities/story.entity';
+import { Story } from '../database/entities/story.entity';
 
 /**
- * Stories endpoints (MVP skeleton).
+ * Stories endpoints.
  *
- * GET /api/v1/stories/location/:locationId -> stories generated for a location
- * GET /api/v1/stories/:id                  -> a single story by id
+ * GET /api/v1/stories/detail/:id             -> a single story
+ * GET /api/v1/stories/location/:locationId   -> stories for a location
+ * GET /api/v1/stories/:locationId            -> same, the Sprint 2 route
+ *
+ * Route order matters: `detail/` and `location/` are declared before the bare
+ * `:locationId` parameter, otherwise Nest would match them as location slugs.
  */
 @Controller('stories')
 export class StoriesController {
   constructor(private readonly storiesService: StoriesService) {}
 
+  @Get('detail/:id')
+  findOne(@Param('id') id: string): Promise<Story> {
+    return this.storiesService.findOne(id);
+  }
+
   @Get('location/:locationId')
-  findByLocation(@Param('locationId') locationId: string): Promise<Story[]> {
+  findByLocationExplicit(
+    @Param('locationId') locationId: string,
+  ): Promise<Story[]> {
     return this.storiesService.findByLocation(locationId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string): Promise<Story> {
-    return this.storiesService.findOne(id);
+  @Get(':locationId')
+  findByLocation(@Param('locationId') locationId: string): Promise<Story[]> {
+    return this.storiesService.findByLocation(locationId);
   }
 }

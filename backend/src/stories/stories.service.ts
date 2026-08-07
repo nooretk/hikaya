@@ -1,28 +1,38 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Story } from './entities/story.entity';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Story } from '../database/entities/story.entity';
+import type {
+  NewStory,
+  StoriesRepository,
+} from '../database/repositories/stories.repository';
+import { STORIES_REPOSITORY } from '../database/repositories/tokens';
 
 /**
  * StoriesService
  *
- * Skeleton service for retrieving AI-generated narratives tied to a
- * location. TODO: replace with real persistence (`stories` table,
- * see database/schema-draft.md) and a real call into the AI module
- * once the narrative generation workflow (see ai/ folder) is wired in.
+ * Reads the narratives attached to a location. Only published stories are
+ * served; AI-generated ones are created with status `pending_review` and stay
+ * out of these results until an editor approves them.
  */
 @Injectable()
 export class StoriesService {
-  private readonly logger = new Logger(StoriesService.name);
+  constructor(
+    @Inject(STORIES_REPOSITORY)
+    private readonly stories: StoriesRepository,
+  ) {}
 
   findByLocation(locationId: string): Promise<Story[]> {
-    // TODO: fetch generated/stored stories for this location
-    this.logger.debug(`findByLocation called with locationId: ${locationId}`);
-    return Promise.resolve([]);
+    return this.stories.findByLocation(locationId);
   }
 
-  findOne(id: string): Promise<Story> {
-    // TODO: fetch a single story by id
-    return Promise.reject(
-      new NotFoundException(`Story with id "${id}" not found`),
-    );
+  async findOne(id: string): Promise<Story> {
+    const story = await this.stories.findById(id);
+    if (!story) {
+      throw new NotFoundException(`Story with id "${id}" not found`);
+    }
+    return story;
+  }
+
+  create(story: NewStory): Promise<Story> {
+    return this.stories.create(story);
   }
 }

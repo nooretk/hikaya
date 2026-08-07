@@ -200,3 +200,57 @@ ________________________________________
 9.	دراسات وتقارير جامعة بيت لحم حول التراث الثقافي.
 
 
+________________________________________
+
+## المصادر والوسائط (مُحدَّث — Sprint 2) / Sources & Media (updated — Sprint 2)
+
+### 1. تصنيف المحتوى / How to read this file
+
+يُقسَّم محتوى هذا الملف إلى ثلاث فئات، ويجب على وحدة الذكاء الاصطناعي عدم الخلط بينها:
+
+| الفئة / Category | التعريف / Definition | كيف يتعامل معها الذكاء الاصطناعي |
+|---|---|---|
+| **حقائق تاريخية / Historical facts** | معلومات مدعومة بمصادر أكاديمية أو أثرية موثقة (تواريخ، أبنية، حكّام، قوائم اليونسكو). | يجوز تبسيطها وإعادة صياغتها فقط. |
+| **تقاليد دينية / Religious traditions** | روايات مرتبطة بعقيدة أو تقليد ديني ("وفقًا للتقليد المسيحي"، "وفقًا للعقيدة الإسلامية"). | يجب تقديمها دائمًا منسوبة إلى التقليد، لا كحقيقة مثبتة. |
+| **حكايات شعبية وتراث شفهي / Oral heritage** | روايات متوارثة بين الأهالي وغير مثبتة تاريخيًا. | يجب تقديمها بوصفها تراثًا شفهيًا، مع ذكر أنها غير مؤكدة. |
+
+الملخّص المُهيّأ للذكاء الاصطناعي لهذا الموقع، والذي يفصل هذه الفئات في أقسام مستقلة، موجود في:
+`content/ai-ready/bethlehem-summary.md`
+
+### 2. روابط مباشرة للمراجع / Direct reference links
+
+| المرجع / Reference | الرابط / Link | النوع / Type |
+|---|---|---|
+| UNESCO — Birthplace of Jesus: Church of the Nativity and the Pilgrimage Route, Bethlehem | <https://whc.unesco.org/en/list/1433/> | صفحة الموقع الرسمية |
+| Encyclopaedia Britannica — Bethlehem | <https://www.britannica.com/place/Bethlehem> | موسوعة |
+| وزارة السياحة والآثار الفلسطينية | <https://www.mota.gov.ps/> | جهة رسمية |
+| جامعة بيت لحم | <https://www.bethlehem.edu/> | دراسات وتقارير تراثية |
+| Library of Congress | <https://www.loc.gov/> | أرشيف وثائقي |
+| ICOMOS | <https://www.icomos.org/> | مجلس دولي للمعالم |
+| Oxford Reference | <https://www.oxfordreference.com/> | مرجع أكاديمي |
+
+**مراجع كتب (بدون روابط مباشرة):** Karen Armstrong, *Jerusalem: One City, Three Faiths*؛
+Leen Ritmeyer, *The Quest* (للسياق التاريخي الإقليمي).
+
+### 3. مراجع الوسائط / Media references
+
+| الوسيط / Asset | الرابط / Link | الرخصة / License |
+|---|---|---|
+| مجموعة صور بيت لحم | <https://commons.wikimedia.org/wiki/Category:Bethlehem> | Wikimedia Commons (تختلف حسب الملف) |
+| صور كنيسة المهد | <https://commons.wikimedia.org/wiki/Category:Church_of_the_Nativity> | Wikimedia Commons |
+| صور مغارة الحليب | <https://commons.wikimedia.org/wiki/Category:Milk_Grotto> | Wikimedia Commons |
+| صور ساحة المهد | <https://commons.wikimedia.org/wiki/Category:Manger_Square> | Wikimedia Commons |
+| صور برك سليمان | <https://commons.wikimedia.org/wiki/Category:Solomon%27s_Pools> | Wikimedia Commons |
+| معرض صور اليونسكو للموقع | <https://whc.unesco.org/en/list/1433/gallery/> | UNESCO |
+
+> **ملاحظة حول الوسائط:** لا يخزّن هذا المستودع أي ملفات صور أو صوت. تُشار الوسائط عبر روابط
+> خارجية فقط، مع تفضيل المصادر ذات الرخص الواضحة (Wikimedia Commons) أو المؤسسات الرسمية.
+> عند إضافة أي وسائط جديدة يجب تسجيل: المصدر، الرخصة، وتاريخ الوصول.
+
+### 4. ملاحظات المصدر / Source notes
+
+- **مستوى المراجعة:** روجعت المادة من فريق توثيق المحتوى واعتُمدت لاستخدام وحدة الذكاء الاصطناعي.
+- **الفجوات المعروفة:** لا يحدد المصدر أعداد السكان الحالية ولا أعداد الزوار السنوية بدقة، ولا تاريخ
+  تأسيس المدينة بدقة. على وحدة الذكاء الاصطناعي إعادة `uncertainty_note` بدل التخمين.
+- **فصل التقليد عن الحقيقة:** رواية مغارة الحليب ونسبة برك سليمان إلى النبي سليمان مصنّفتان في هذا
+  الملف بوصفهما تقليدًا/تراثًا شعبيًا، وقد أشارت الدراسات الأثرية إلى أصل روماني للبرك.

@@ -1,0 +1,35 @@
+{
+  "request": {
+    "location_id": "bethlehem",
+    "target_audience": "tourist",
+    "language": "en",
+    "tone": "storytelling",
+    "is_reviewed": true
+  },
+  "response": {
+    "status": "ok",
+    "title": "Visiting Bethlehem",
+    "summary": "Bethlehem is one of the oldest historic cities in Palestine, about 10 km south of Jerusalem, on a plateau roughly 775 m above sea level.",
+    "narrative": "Bethlehem is one of the oldest historic cities in Palestine, about 10 km south of Jerusalem, on a plateau roughly 775 m above sea level. It is world-famous because, in Christian tradition, it is the birthplace of Jesus Christ, and it is visited by millions of pilgrims and tourists every year. Alongside its religious standing, it has thousands of years of civilisational history - Canaanite, Roman, Byzantine, Muslim Arab, Crusader, Mamluk, Ottoman, then the British Mandate and the modern era. It is bordered by Jerusalem to the north, Beit Sahour to the east, Beit Jala to the west, and al-Khader to the south-west.\n\nThings to look for:\n- Church of the Nativity - completed around 339 CE under Constantine I and Helena, partly rebuilt by Justinian I in the 6th century CE. Known for its massive stone columns, ancient mosaic floors, historic icons, wooden roof, and the Grotto of the Nativity with its fourteen-pointed silver star. One of the oldest churches still in use for worship; UNESCO World Heritage listed in 2012.\n- Milk Grotto - a short distance from the Church of the Nativity.\n- Shepherds' Fields - in the neighbouring town of Beit Sahour; today it holds small churches, archaeological caves and pilgrim facilities.\n- Mosque of Omar - in Manger Square directly opposite the Church of the Nativity; built in the 19th century CE and named after Caliph Umar ibn al-Khattab.\n- Solomon's Pools - south-west of Bethlehem; three large pools used since antiquity to collect rain and spring water. Archaeological study indicates they were created and developed in the Roman period and used in the Islamic and Ottoman periods to supply Jerusalem and Bethlehem with water.\n- The old market - small shops selling heritage products and handicrafts.",
+    "target_audience": "tourist",
+    "language": "en",
+    "tone": "storytelling",
+    "word_count": 292,
+    "uncertainty_notes": [
+      "Gaps the AI must not fill: current population figures, exact visitor numbers, and the precise founding date of the city are not established in the source. If a request needs them, the AI must return an uncertainty note instead of guessing."
+    ],
+    "warnings": [],
+    "source": {
+      "location_id": "bethlehem",
+      "location_name": "Bethlehem",
+      "content_file": "content/beth.md",
+      "summary_file": "content/ai-ready/bethlehem-summary.md",
+      "provided_inline": false
+    },
+    "model": {
+      "provider": "offline-extractive",
+      "name": "hikaya-extractive-v1"
+    },
+    "error": null
+  }
+}

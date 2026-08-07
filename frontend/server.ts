@@ -60,7 +60,9 @@ function generateFallbackStory(
 }
 
 const app = express();
-const PORT = 3000;
+// 5173 by default so the frontend does not collide with the Hikaya backend,
+// which serves the API on 3000.
+const PORT = Number(process.env.PORT ?? 5173);
 
 // Body parser
 app.use(express.json({ limit: "50mb" }));

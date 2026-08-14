@@ -97,17 +97,17 @@
       "location_id": "jerusalem",
       "type": "image",
       "subject": "Damascus Gate",
-      "caption": "Damascus Gate (Bab al-Amud), the main northern entrance to the Old City.",
+      "caption": "Damascus Gate (Bab al-Amud) today, the main northern entrance to the Old City.",
       "era": "modern",
       "pair_role": "after",
-      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/114627_ancient_jerusalem_PikiWiki_Israel.jpg?width=1600",
-      "thumb_url": "https://commons.wikimedia.org/wiki/Special:FilePath/114627_ancient_jerusalem_PikiWiki_Israel.jpg?width=600",
-      "file": "114627 ancient jerusalem PikiWiki Israel.jpg",
-      "credit": "הנס פין",
-      "license": "Public domain",
-      "license_url": "",
-      "date": "1940",
-      "source_url": "https://commons.wikimedia.org/wiki/File:114627_ancient_jerusalem_PikiWiki_Israel.jpg"
+      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/125307_jerusalem_-_nablus_gate_square_entrance_PikiWiki_Israel.jpg?width=1600",
+      "thumb_url": "https://commons.wikimedia.org/wiki/Special:FilePath/125307_jerusalem_-_nablus_gate_square_entrance_PikiWiki_Israel.jpg?width=600",
+      "file": "125307 jerusalem - nablus gate square entrance PikiWiki Israel.jpg",
+      "credit": "שלמה רודד",
+      "license": "CC BY 2.5",
+      "license_url": "https://creativecommons.org/licenses/by/2.5",
+      "date": "2025-01-26",
+      "source_url": "https://commons.wikimedia.org/wiki/File:125307_jerusalem_-_nablus_gate_square_entrance_PikiWiki_Israel.jpg"
     },
     {
       "id": "jer-gate-then",
@@ -380,6 +380,23 @@
       "license_url": "",
       "date": "between 1842 and 1844date QS:P571,+1842-",
       "source_url": "https://commons.wikimedia.org/wiki/File:190._Samarie._Apside._Egl._S._Jean_-_btv1b6903034k.jpg"
+    },
+    {
+      "id": "jer-gate-1940",
+      "location_id": "jerusalem",
+      "type": "image",
+      "subject": "Damascus Gate",
+      "caption": "Damascus Gate photographed in 1940 by Hans Pinn.",
+      "era": "historical",
+      "pair_role": null,
+      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/114627_ancient_jerusalem_PikiWiki_Israel.jpg?width=1600",
+      "thumb_url": "https://commons.wikimedia.org/wiki/Special:FilePath/114627_ancient_jerusalem_PikiWiki_Israel.jpg?width=600",
+      "file": "114627 ancient jerusalem PikiWiki Israel.jpg",
+      "credit": "הנס פין (Hans Pinn)",
+      "license": "Public domain",
+      "license_url": "",
+      "date": "1940",
+      "source_url": "https://commons.wikimedia.org/wiki/File:114627_ancient_jerusalem_PikiWiki_Israel.jpg"
     }
   ]
 }

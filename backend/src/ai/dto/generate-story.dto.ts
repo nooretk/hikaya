@@ -15,6 +15,7 @@ export const AUDIENCES = [
   'tourist',
   'child',
   'short',
+  'historian',
   'general',
 ] as const;
 export const TONES = [

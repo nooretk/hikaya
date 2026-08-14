@@ -2,19 +2,23 @@
 
     python3 ai/scripts/export_seed_data.py
 
-Writes two files, both committed:
+Writes three files, all committed:
 
-    database/seed-generated.sql                  timeline + media rows for PostgreSQL
-    backend/src/database/seed/generated-data.ts  the same rows for the in-memory repository
+    database/seed-generated.sql                     PostgreSQL rows
+    backend/src/database/seed/generated-data.ts     the in-memory repository seed
+    frontend/src/mocks/generatedMockData.ts         the frontend offline fallback
 
-Sources of truth, neither of which is edited by hand afterwards:
+Sources of truth, none of which is edited by hand afterwards:
 
     content/ai-ready/*-summary.md    the historical timeline tables
     content/media/media.json         verified, licensed images
+    content/quiz/quiz.json           comprehension questions
 
-Before this script existed, the timeline and media rows would have had to be
-maintained by hand in two places that drift apart silently. Now the content team
-edits the content, and both seeds are regenerated from it.
+The same timeline, images and questions have to exist in three places for the
+system to work offline at every layer. Written by hand they would drift apart
+silently, and the frontend would end up showing a "sample" timeline that
+contradicted the real one. So the content team edits content, and all three
+seeds are regenerated from it.
 """
 
 import json
@@ -29,7 +33,9 @@ from service import content_loader, textutils  # noqa: E402
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SQL_OUT = os.path.join(REPO, "database", "seed-generated.sql")
 TS_OUT = os.path.join(REPO, "backend", "src", "database", "seed", "generated-data.ts")
+MOCK_OUT = os.path.join(REPO, "frontend", "src", "mocks", "generatedMockData.ts")
 MEDIA_JSON = os.path.join(REPO, "content", "media", "media.json")
+QUIZ_JSON = os.path.join(REPO, "content", "quiz", "quiz.json")
 
 # Locations in the MVP, in display order.
 LOCATIONS = ["jerusalem", "bethlehem", "sebastia"]
@@ -134,20 +140,77 @@ def collect_timeline():
     return rows
 
 
+# A photograph taken before this year is historical, whatever it was labelled.
+# 1940 shots have been mislabelled "modern" here before, which turned a
+# then-and-now comparison into then-and-then without anything complaining.
+MODERN_FROM_YEAR = 1990
+
+_CAPTURE_YEAR_RE = re.compile(r"\b(1[6-9]\d{2}|20\d{2})\b")
+
+
 def load_media():
     # type: () -> list
     with open(MEDIA_JSON) as handle:
         document = json.load(handle)
     rows = []
     per_location = {}
+    pairs = {}
     for record in document["media"]:
         location_id = record["location_id"]
         order = per_location.get(location_id, 0)
         per_location[location_id] = order + 1
+
         if not record.get("license") or not record.get("credit"):
             raise SystemExit("Media '%s' is missing licence or credit." % record["id"])
+
+        # Cross-check the declared era against the capture date, where the
+        # source gives one. Ranges like "between 1934 and 1939" use the earliest
+        # year, which is the safe direction: it can only pull a photo earlier.
+        years = [int(match) for match in _CAPTURE_YEAR_RE.findall(record.get("date") or "")]
+        if years:
+            earliest = min(years)
+            expected = "modern" if earliest >= MODERN_FROM_YEAR else "historical"
+            if record["era"] != expected:
+                raise SystemExit(
+                    "Media '%s' is dated %d but marked '%s'; expected '%s'."
+                    % (record["id"], earliest, record["era"], expected)
+                )
+
+        role = record.get("pair_role")
+        if role in ("before", "after"):
+            if role == "before" and record["era"] != "historical":
+                raise SystemExit("Media '%s' is the 'before' half but is not historical."
+                                 % record["id"])
+            if role == "after" and record["era"] != "modern":
+                raise SystemExit("Media '%s' is the 'after' half but is not modern."
+                                 % record["id"])
+            pairs.setdefault(location_id, {})[role] = record
+
         rows.append(dict(record, sort_order=order))
+
+    # A comparison only means anything if both halves show the same thing.
+    for location_id, halves in pairs.items():
+        if len(halves) == 2 and halves["before"]["subject"] != halves["after"]["subject"]:
+            raise SystemExit(
+                "The before/after pair for '%s' shows two different subjects (%s vs %s)."
+                % (location_id, halves["before"]["subject"], halves["after"]["subject"])
+            )
+
     return rows
+
+
+def load_quiz():
+    # type: () -> list
+    with open(QUIZ_JSON) as handle:
+        document = json.load(handle)
+    for record in document["questions"]:
+        options = record["options"]
+        if not 0 <= record["answer_index"] < len(options):
+            raise SystemExit(
+                "Quiz '%s' has answer_index outside its options." % record["id"])
+        if not record.get("source_note"):
+            raise SystemExit("Quiz '%s' has no source_note." % record["id"])
+    return document["questions"]
 
 
 # --------------------------------------------------------------------------
@@ -165,7 +228,11 @@ def sql_literal(value):
     return "'" + flattened.replace("'", "''") + "'"
 
 
-def write_sql(timeline, media):
+def sql_array(values):
+    return "ARRAY[" + ", ".join(sql_literal(value) for value in values) + "]"
+
+
+def write_sql(timeline, media, quiz):
     lines = [
         "-- =============================================================================",
         "-- Hikaya - GENERATED seed data. Do not edit by hand.",
@@ -181,6 +248,7 @@ def write_sql(timeline, media):
         "",
         "BEGIN;",
         "",
+        "DELETE FROM quiz_questions;",
         "DELETE FROM timeline_events;",
         "DELETE FROM media;",
         "",
@@ -214,6 +282,23 @@ def write_sql(timeline, media):
             sql_literal(row["credit"]), sql_literal(row["license"]), sql_literal(row["license_url"]),
             sql_literal(row["date"]), sql_literal(row["source_url"]), sql_literal(row["sort_order"])))
     lines.append(",\n".join(values) + ";")
+
+    lines.extend([
+        "",
+        "-- %d quiz questions ----------------------------------------------------------" % len(quiz),
+        "INSERT INTO quiz_questions",
+        "  (id, location_id, question, options, answer_index, explanation, source_note, sort_order)",
+        "VALUES",
+    ])
+    values = []
+    for row in quiz:
+        values.append("  (%s, %s, %s, %s, %s, %s, %s, %s)" % (
+            sql_literal(row["id"]), sql_literal(row["location_id"]),
+            sql_literal(row["question"]), sql_array(row["options"]),
+            sql_literal(row["answer_index"]), sql_literal(row["explanation"]),
+            sql_literal(row["source_note"]), sql_literal(row["sort_order"])))
+    lines.append(",\n".join(values) + ";")
+
     lines.extend(["", "COMMIT;", ""])
 
     with open(SQL_OUT, "w") as handle:
@@ -244,24 +329,14 @@ def ts_literal(value):
     return "'" + re.sub(r"\s{2,}", " ", escaped).strip() + "'"
 
 
-def write_ts(timeline, media):
-    lines = [
-        "import { MediaItem } from '../entities/media.entity';",
-        "import { TimelineEvent } from '../entities/timeline-event.entity';",
-        "",
-        "/**",
-        " * GENERATED FILE - do not edit by hand.",
-        " *",
-        " * Regenerate with:  python3 ai/scripts/export_seed_data.py",
-        " *",
-        " * Mirrors database/seed-generated.sql so the in-memory repositories serve",
-        " * exactly the same timeline and media as PostgreSQL. Both are produced from",
-        " * content/ai-ready/*-summary.md and content/media/media.json.",
-        " */",
-        "",
-        "export const SEED_TIMELINE: TimelineEvent[] = [",
-    ]
-    for row in timeline:
+def ts_array(values):
+    return "[" + ", ".join(ts_literal(value) for value in values) + "]"
+
+
+def _timeline_ts(rows, key_style):
+    """Render timeline rows. `key_style` picks camelCase field names."""
+    lines = []
+    for row in rows:
         lines.append("  {")
         lines.append("    id: %s," % ts_literal(row["id"]))
         lines.append("    locationId: %s," % ts_literal(row["location_id"]))
@@ -272,8 +347,13 @@ def write_ts(timeline, media):
         lines.append("    isTradition: %s," % ts_literal(row["is_tradition"]))
         lines.append("    sourceFile: %s," % ts_literal(row["source_file"]))
         lines.append("  },")
-    lines.extend(["];", "", "export const SEED_MEDIA: MediaItem[] = ["])
-    for row in media:
+    del key_style
+    return lines
+
+
+def _media_ts(rows):
+    lines = []
+    for row in rows:
         lines.append("  {")
         lines.append("    id: %s," % ts_literal(row["id"]))
         lines.append("    locationId: %s," % ts_literal(row["location_id"]))
@@ -291,6 +371,73 @@ def write_ts(timeline, media):
         lines.append("    sourceUrl: %s," % ts_literal(row["source_url"]))
         lines.append("    sortOrder: %s," % ts_literal(row["sort_order"]))
         lines.append("  },")
+    return lines
+
+
+def _quiz_ts(rows):
+    lines = []
+    for row in rows:
+        lines.append("  {")
+        lines.append("    id: %s," % ts_literal(row["id"]))
+        lines.append("    locationId: %s," % ts_literal(row["location_id"]))
+        lines.append("    question: %s," % ts_literal(row["question"]))
+        lines.append("    options: %s," % ts_array(row["options"]))
+        lines.append("    answerIndex: %s," % ts_literal(row["answer_index"]))
+        lines.append("    explanation: %s," % ts_literal(row["explanation"]))
+        lines.append("    sourceNote: %s," % ts_literal(row["source_note"]))
+        lines.append("    sortOrder: %s," % ts_literal(row["sort_order"]))
+        lines.append("  },")
+    return lines
+
+
+HEADER = [
+    "/**",
+    " * GENERATED FILE - do not edit by hand.",
+    " *",
+    " * Regenerate with:  python3 ai/scripts/export_seed_data.py",
+    " *",
+    " * Produced from content/ai-ready/*-summary.md, content/media/media.json",
+    " * and content/quiz/quiz.json, so every layer shows the same timeline,",
+    " * images and questions.",
+    " */",
+    "",
+]
+
+
+def write_mock(timeline, media, quiz):
+    """The frontend's offline fallback data."""
+    lines = [
+        "import {",
+        "  ApiMedia,",
+        "  ApiQuizQuestion,",
+        "  ApiTimelineEvent,",
+        "} from '../types';",
+        "",
+    ] + HEADER
+    lines.append("export const MOCK_TIMELINE: ApiTimelineEvent[] = [")
+    lines.extend(_timeline_ts(timeline, "camel"))
+    lines.extend(["];", "", "export const MOCK_MEDIA: ApiMedia[] = ["])
+    lines.extend(_media_ts(media))
+    lines.extend(["];", "", "export const MOCK_QUIZ: ApiQuizQuestion[] = ["])
+    lines.extend(_quiz_ts(quiz))
+    lines.extend(["];", ""])
+    with open(MOCK_OUT, "w") as handle:
+        handle.write("\n".join(lines))
+
+
+def write_ts(timeline, media, quiz):
+    lines = [
+        "import { MediaItem } from '../entities/media.entity';",
+        "import { QuizQuestion } from '../entities/quiz-question.entity';",
+        "import { TimelineEvent } from '../entities/timeline-event.entity';",
+        "",
+    ] + HEADER
+    lines.append("export const SEED_TIMELINE: TimelineEvent[] = [")
+    lines.extend(_timeline_ts(timeline, "camel"))
+    lines.extend(["];", "", "export const SEED_MEDIA: MediaItem[] = ["])
+    lines.extend(_media_ts(media))
+    lines.extend(["];", "", "export const SEED_QUIZ: QuizQuestion[] = ["])
+    lines.extend(_quiz_ts(quiz))
     lines.extend(["];", ""])
 
     with open(TS_OUT, "w") as handle:
@@ -300,13 +447,18 @@ def write_ts(timeline, media):
 def main():
     timeline = collect_timeline()
     media = load_media()
+    quiz = load_quiz()
 
-    write_sql(timeline, media)
-    write_ts(timeline, media)
+    write_sql(timeline, media, quiz)
+    write_ts(timeline, media, quiz)
+    write_mock(timeline, media, quiz)
 
     print("Generated from reviewed content:")
-    print("  %-46s %3d timeline events, %2d media" % ("database/seed-generated.sql", len(timeline), len(media)))
-    print("  %-46s same" % "backend/src/database/seed/generated-data.ts")
+    print("  %d timeline events, %d media, %d quiz questions ->"
+          % (len(timeline), len(media), len(quiz)))
+    print("    database/seed-generated.sql")
+    print("    backend/src/database/seed/generated-data.ts")
+    print("    frontend/src/mocks/generatedMockData.ts")
     for location_id in LOCATIONS:
         events = [row for row in timeline if row["location_id"] == location_id]
         images = [row for row in media if row["location_id"] == location_id]

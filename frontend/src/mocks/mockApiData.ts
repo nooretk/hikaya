@@ -3,7 +3,15 @@ import {
   ApiLocation,
   ApiStory,
   GeneratedStory,
+  GuideAnswer,
 } from "../types";
+
+/**
+ * Timeline, gallery images and quiz questions are generated from the content
+ * files rather than written here - see ai/scripts/export_seed_data.py. They are
+ * re-exported so callers have one import for all mock data.
+ */
+export { MOCK_MEDIA, MOCK_QUIZ, MOCK_TIMELINE } from "./generatedMockData";
 
 /**
  * Mock data used when the backend is unreachable.
@@ -30,7 +38,7 @@ export const MOCK_LOCATIONS: ApiLocation[] = [
     description:
       "A historic Palestinian city about 10 km south of Jerusalem, roughly 775 m above sea level. Known worldwide for the Church of the Nativity, completed around 339 CE and World Heritage listed in 2012, and for its olive-wood and mother-of-pearl crafts.",
     coverImageUrl:
-      "https://images.unsplash.com/photo-1590076212879-11ef849646b5?auto=format&fit=crop&q=80&w=1200",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Church_of_the_Nativity%2C_2019_%2801%29.jpg?width=1600",
     contentFile: "content/beth.md",
     aiSummaryFile: "content/ai-ready/bethlehem-summary.md",
     categories: ["Cultural Heritage", "Historical Landmark", "Religious Landmark"],
@@ -47,7 +55,7 @@ export const MOCK_LOCATIONS: ApiLocation[] = [
     description:
       "One of the oldest continuously inhabited cities in the world. Roughly 0.9 km² inside Ottoman walls built under Sultan Suleiman the Magnificent, with eight historic gates, four quarters, and more than 220 historical monuments. Inscribed on the UNESCO World Heritage List in 1981.",
     coverImageUrl:
-      "https://images.unsplash.com/photo-1542856391-010fb87dcfed?auto=format&fit=crop&q=80&w=1200",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/18405-Jerusalem-Pano_%2828887202772%29.jpg?width=1600",
     contentFile: "content/oldCity.md",
     aiSummaryFile: "content/ai-ready/old-city-jerusalem-summary.md",
     categories: ["Cultural Heritage", "Historical Landmark", "Religious Landmark"],
@@ -64,7 +72,7 @@ export const MOCK_LOCATIONS: ApiLocation[] = [
     description:
       "An archaeological site about 12 km north-west of Nablus on a hill some 440 m above sea level. Capital of the northern Kingdom of Israel in the 9th century BCE, rebuilt by Herod the Great in 27 BCE and renamed after Emperor Augustus. Holds one of the best-preserved Roman streets in Palestine.",
     coverImageUrl:
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=1200",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Columned_street_-_panoramio.jpg?width=1600",
     contentFile: "content/sebastia.md",
     aiSummaryFile: "content/ai-ready/sebastia-summary.md",
     categories: ["Archaeological Site", "Cultural Heritage", "Historical Landmark"],
@@ -206,6 +214,29 @@ export function mockGeneratedStory(
       contentFile: location.contentFile,
       summaryFile: location.aiSummaryFile,
     },
+    generatedBy: "frontend-mock",
+  };
+}
+
+/**
+ * Offline stand-in for POST /ai/ask-guide.
+ *
+ * It answers nothing. Without the backend there is no reviewed content to
+ * search, and a guide that invented an answer here would break the one promise
+ * the whole feature rests on - so it says plainly that it cannot answer.
+ */
+export function mockGuideAnswer(locationId: string, question: string): GuideAnswer {
+  const location = MOCK_LOCATIONS.find((item) => item.id === locationId);
+  return {
+    answer:
+      `The heritage guide needs the Hikaya API to search the reviewed records for ` +
+      `${location?.name ?? "this location"}, and it is not reachable right now. ` +
+      `Your question has not been answered - it has not been guessed at either.`,
+    answeredFromSource: false,
+    excerpts: [],
+    uncertaintyNotes: [
+      `Offline: "${question.trim()}" was not searched against any reviewed content.`,
+    ],
     generatedBy: "frontend-mock",
   };
 }

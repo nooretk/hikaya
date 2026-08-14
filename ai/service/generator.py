@@ -458,11 +458,19 @@ _STOPWORDS = {
     "it", "its", "many", "me", "much", "not", "of", "on", "or", "please", "tell", "that",
     "the", "their", "there", "they", "this", "to", "today", "was", "were", "what",
     "when", "where", "which", "who", "why", "will", "with", "you", "your",
+    "here", "near", "nearby", "some", "something", "anything",
 }
 
 # A keyword occurring in more than this share of the source statements is too
 # common to prove relevance - "Jerusalem" matches every line of the Jerusalem file.
 _COMMON_KEYWORD_RATIO = 0.3
+
+# At least this share of a question's content words must appear in the records
+# before an answer is offered at all. Below it, one incidental word match was
+# enough to return a confidently irrelevant passage: "the best falafel shop
+# here" came back with the list of city gates, because "best" appears in
+# "best known". Refusing is the more useful answer.
+_MIN_COVERAGE = 0.5
 
 
 def _retrieve(question, source_text, location_name="", limit=3):
@@ -498,6 +506,11 @@ def _retrieve(question, source_text, location_name="", limit=3):
     present = {word for word in keywords if frequencies[word] > 0}
     if not present:
         # Nothing the question asks about is mentioned in the records at all.
+        return [], []
+
+    # Most of what was asked about is missing, so whatever did match is
+    # incidental. Saying so beats answering a different question convincingly.
+    if len(present) / len(keywords) < _MIN_COVERAGE:
         return [], []
 
     # Keywords that occur nearly everywhere cannot prove relevance on their own.

@@ -1,6 +1,6 @@
 import { QuizQuestion } from '../entities/quiz-question.entity';
 import { DatabaseService } from '../database.service';
-import { SEED_QUIZ } from '../seed/seed-data';
+import { SEED_QUIZ } from '../seed/generated-data';
 
 export interface QuizRepository {
   findByLocation(locationId: string): Promise<QuizQuestion[]>;
@@ -42,7 +42,7 @@ export class PostgresQuizRepository implements QuizRepository {
   }
 }
 
-/** Serves database/seed.sql from memory when PostgreSQL is absent. */
+/** Serves database/seed-generated.sql from memory when PostgreSQL is absent. */
 export class InMemoryQuizRepository implements QuizRepository {
   private readonly questions: QuizQuestion[] = SEED_QUIZ.map((question) => ({
     ...question,

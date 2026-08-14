@@ -9,6 +9,7 @@ import { HomePage } from "./pages/HomePage";
 import { MapPage } from "./pages/MapPage";
 import { LocationDetailsPage } from "./pages/LocationDetailsPage";
 import { ContributePage } from "./pages/ContributePage";
+import { ConstellationPage } from "./pages/ConstellationPage";
 import { AboutPage } from "./pages/AboutPage";
 import ExplorerPage from "./pages/ExplorerPage";
 
@@ -17,6 +18,7 @@ import ExplorerPage from "./pages/ExplorerPage";
  *
  *   /                   home
  *   /map                interactive map of the archived locations
+ *   /constellation      the archive drawn as a web of shared themes
  *   /locations/:id      details, reviewed stories, AI narrative, memories
  *   /contribute         user contribution form
  *   /about              project background
@@ -33,6 +35,7 @@ export default function App() {
           <Route index element={<HomePage />} />
           <Route path="map" element={<MapPage />} />
           <Route path="locations/:locationId" element={<LocationDetailsPage />} />
+          <Route path="constellation" element={<ConstellationPage />} />
           <Route path="contribute" element={<ContributePage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="explorer" element={<ExplorerPage />} />

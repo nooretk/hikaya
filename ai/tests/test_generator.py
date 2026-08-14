@@ -210,6 +210,14 @@ class HeritageGuideTests(unittest.TestCase):
                         "answer word not found in source: %s" % word,
                     )
 
+    def test_refuses_when_most_of_the_question_is_absent_from_the_records(self):
+        # "best" appears in the source ("best known"), but falafel shops do not.
+        # One incidental word match must not buy a confident-sounding answer.
+        response = answer_question(GuideRequest(
+            location_id="jerusalem", question="What is the best falafel shop here?"))
+        self.assertFalse(response.answered_from_source)
+        self.assertIn("not available", response.answer.lower())
+
     def test_a_follow_up_is_understood_from_the_conversation(self):
         first = answer_question(GuideRequest(
             location_id="jerusalem", question="Tell me about the Dome of the Rock"))

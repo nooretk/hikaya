@@ -38,6 +38,19 @@ npm run lint     # tsc --noEmit
 The dev server listens on **5173**, not 3000, so it does not collide with the
 backend API. Override with `PORT` in `.env`.
 
+If 5173 is already taken it steps up to the next free port and says so:
+
+```
+[Hikaya Server] Port 5173 is already in use - using 5175 instead.
+[Hikaya Server] Running on http://localhost:5175
+```
+
+Always trust that line over the default. The check connects to both `127.0.0.1`
+and `::1` rather than just trying to bind, because on macOS another dev server
+holding `[::1]:5173` and this one binding the wildcard can coexist happily - and
+then `localhost` resolves to `::1` first and quietly serves you the other
+project.
+
 For the full experience, run all three parts:
 
 ```bash

@@ -4,12 +4,7 @@ import { of, throwError } from 'rxjs';
 import { AiService } from './ai.service';
 import { LocationsService } from '../locations/locations.service';
 import { StoriesService } from '../stories/stories.service';
-import { InMemoryLocationsRepository } from '../database/repositories/locations.repository';
-import { InMemoryStoriesRepository } from '../database/repositories/stories.repository';
-import {
-  LOCATIONS_REPOSITORY,
-  STORIES_REPOSITORY,
-} from '../database/repositories/tokens';
+import { IN_MEMORY_REPOSITORY_PROVIDERS } from '../testing/in-memory-providers';
 
 /** A successful response body from the AI module, per ai/api-contract.md. */
 const aiResponse = {
@@ -49,11 +44,7 @@ describe('AiService', () => {
         LocationsService,
         StoriesService,
         { provide: HttpService, useValue: { post } },
-        {
-          provide: LOCATIONS_REPOSITORY,
-          useClass: InMemoryLocationsRepository,
-        },
-        { provide: STORIES_REPOSITORY, useClass: InMemoryStoriesRepository },
+        ...IN_MEMORY_REPOSITORY_PROVIDERS,
       ],
     }).compile();
 

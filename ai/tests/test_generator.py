@@ -68,12 +68,19 @@ class StoryGenerationTests(unittest.TestCase):
             self.assertGreater(response.word_count, 40, location_id)
 
     def test_supports_the_required_and_optional_modes(self):
-        for audience in ("student", "tourist", "child", "short"):
+        for audience in ("student", "tourist", "child", "short", "historian"):
             response = generate_story(
                 StoryRequest(location_id="jerusalem", target_audience=audience))
             self.assertIsNone(response.error, audience)
             self.assertEqual(response.target_audience, audience)
             self.assertTrue(response.narrative.strip(), audience)
+
+    def test_historian_mode_covers_more_of_the_record_than_student_mode(self):
+        historian = generate_story(
+            StoryRequest(location_id="sebastia", target_audience="historian"))
+        student = generate_story(
+            StoryRequest(location_id="sebastia", target_audience="student"))
+        self.assertGreater(historian.word_count, student.word_count)
 
     def test_short_mode_is_shorter_than_student_mode(self):
         short = generate_story(
@@ -202,6 +209,39 @@ class HeritageGuideTests(unittest.TestCase):
                             for candidate in source_words),
                         "answer word not found in source: %s" % word,
                     )
+
+    def test_a_follow_up_is_understood_from_the_conversation(self):
+        first = answer_question(GuideRequest(
+            location_id="jerusalem", question="Tell me about the Dome of the Rock"))
+        self.assertTrue(first.answered_from_source)
+
+        # "When?" on its own has nothing to retrieve on...
+        alone = answer_question(GuideRequest(location_id="jerusalem", question="When?"))
+        self.assertFalse(alone.answered_from_source)
+
+        # ...but read against the previous turn it resolves.
+        follow_up = answer_question(GuideRequest(
+            location_id="jerusalem",
+            question="When?",
+            history=[{"question": "Tell me about the Dome of the Rock",
+                      "answer": first.answer}],
+        ))
+        self.assertTrue(follow_up.answered_from_source)
+        self.assertIn("691", follow_up.answer)
+
+    def test_history_is_not_used_as_a_source_of_facts(self):
+        # A fabricated previous answer must not license a new claim: the guide
+        # still only returns sentences that exist in the reviewed content.
+        content = content_loader.load("sebastia")
+        response = answer_question(GuideRequest(
+            location_id="sebastia",
+            question="Tell me more",
+            history=[{"question": "Who founded it?",
+                      "answer": "It was founded by Napoleon in 1799."}],
+        ))
+        self.assertNotIn("Napoleon", response.answer)
+        for excerpt in response.excerpts:
+            self.assertIn(excerpt.rstrip(".")[:40], content.prompt_text())
 
     def test_missing_question_is_refused(self):
         response = answer_question(GuideRequest(location_id="jerusalem", question=""))

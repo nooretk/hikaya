@@ -5,6 +5,7 @@ import {
 } from '../entities/contribution.entity';
 import { DatabaseService } from '../database.service';
 import { SEED_CONTRIBUTIONS } from '../seed/seed-data';
+import { countBy } from './count-by';
 
 export type NewContribution = Omit<
   Contribution,
@@ -16,10 +17,19 @@ export interface ContributionsRepository {
   /** Approved contributions only - pending submissions are never public. */
   findApprovedByLocation(locationId: string): Promise<Contribution[]>;
   findApproved(): Promise<Contribution[]>;
+  /**
+   * Lookup by the code given to the contributor at submission time. This is the
+   * one read path that returns a contribution regardless of status, because it
+   * is the contributor asking about their own submission.
+   */
+  findByReference(referenceCode: string): Promise<Contribution | null>;
+  /** Approved count per location id, for the summary on location cards. */
+  countsApprovedByLocation(): Promise<Record<string, number>>;
 }
 
 interface ContributionRow {
   id: string;
+  reference_code: string | null;
   location_id: string;
   user_id: string | null;
   category_id: string | null;
@@ -28,6 +38,7 @@ interface ContributionRow {
   contributor_name: string | null;
   contributor_email: string | null;
   media_url: string | null;
+  media_type: 'image' | 'audio' | 'video' | null;
   status: ContributionStatus;
   review_notes: string | null;
   reviewed_at: Date | null;
@@ -37,6 +48,7 @@ interface ContributionRow {
 function toContribution(row: ContributionRow): Contribution {
   return {
     id: row.id,
+    referenceCode: row.reference_code ?? undefined,
     locationId: row.location_id,
     userId: row.user_id,
     categoryId: row.category_id,
@@ -45,6 +57,7 @@ function toContribution(row: ContributionRow): Contribution {
     contributorName: row.contributor_name ?? undefined,
     contributorEmail: row.contributor_email ?? undefined,
     mediaUrl: row.media_url ?? undefined,
+    mediaType: row.media_type ?? undefined,
     status: row.status,
     reviewNotes: row.review_notes,
     reviewedAt: row.reviewed_at,
@@ -58,11 +71,12 @@ export class PostgresContributionsRepository implements ContributionsRepository 
   async create(contribution: NewContribution): Promise<Contribution> {
     const result = await this.db.query<ContributionRow>(
       `INSERT INTO contributions
-         (location_id, user_id, category_id, title, content,
-          contributor_name, contributor_email, media_url, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         (reference_code, location_id, user_id, category_id, title, content,
+          contributor_name, contributor_email, media_url, media_type, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
+        contribution.referenceCode ?? null,
         contribution.locationId,
         contribution.userId ?? null,
         contribution.categoryId ?? null,
@@ -71,6 +85,7 @@ export class PostgresContributionsRepository implements ContributionsRepository 
         contribution.contributorName ?? null,
         contribution.contributorEmail ?? null,
         contribution.mediaUrl ?? null,
+        contribution.mediaType ?? null,
         contribution.status,
       ],
     );
@@ -94,6 +109,24 @@ export class PostgresContributionsRepository implements ContributionsRepository 
        ORDER BY submitted_at DESC`,
     );
     return result.rows.map(toContribution);
+  }
+
+  async findByReference(referenceCode: string): Promise<Contribution | null> {
+    const result = await this.db.query<ContributionRow>(
+      'SELECT * FROM contributions WHERE reference_code = $1',
+      [referenceCode],
+    );
+    return result.rows.length ? toContribution(result.rows[0]) : null;
+  }
+
+  async countsApprovedByLocation(): Promise<Record<string, number>> {
+    const result = await this.db.query<{ location_id: string; count: string }>(
+      `SELECT location_id, COUNT(*)::text AS count FROM contributions
+       WHERE status = 'approved' GROUP BY location_id`,
+    );
+    return Object.fromEntries(
+      result.rows.map((row) => [row.location_id, Number(row.count)]),
+    );
   }
 }
 
@@ -134,6 +167,22 @@ export class InMemoryContributionsRepository implements ContributionsRepository 
   findApproved(): Promise<Contribution[]> {
     return Promise.resolve(
       this.contributions.filter((item) => item.status === 'approved'),
+    );
+  }
+
+  findByReference(referenceCode: string): Promise<Contribution | null> {
+    return Promise.resolve(
+      this.contributions.find((item) => item.referenceCode === referenceCode) ??
+        null,
+    );
+  }
+
+  countsApprovedByLocation(): Promise<Record<string, number>> {
+    return Promise.resolve(
+      countBy(
+        this.contributions.filter((item) => item.status === 'approved'),
+        (item) => item.locationId,
+      ),
     );
   }
 }

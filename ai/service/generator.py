@@ -156,7 +156,8 @@ def answer_question(request, content_dir=None):
             raw = llm.complete(
                 prompts.GUIDE_SYSTEM_PROMPT,
                 prompts.build_guide_prompt(
-                    source_text, location_name, request.question, request.language
+                    source_text, location_name, request.question, request.language,
+                    history=request.history,
                 ),
             )
             blocks = llm.parse_labelled_blocks(raw, ["ANSWER", "FROM_SOURCE", "EXCERPT"])
@@ -175,7 +176,10 @@ def answer_question(request, content_dir=None):
         except llm.LLMUnavailable:
             pass  # fall through to the offline retrieval below
 
-    excerpts, coverage_notes = _retrieve(request.question, retrieval_text, location_name)
+    # A follow-up like "and when was that?" carries almost no keywords of its
+    # own, so the previous question is folded in before retrieval.
+    query = _expand_with_history(request.question, request.history)
+    excerpts, coverage_notes = _retrieve(query, retrieval_text, location_name)
     if not excerpts:
         return GuideResponse(
             status=STATUS_OK,
@@ -427,6 +431,26 @@ def _default_title(location_name, mode):
 # ---------------------------------------------------------------------------
 # Offline retrieval for the Heritage Guide
 # ---------------------------------------------------------------------------
+
+def _expand_with_history(question, history):
+    # type: (str, List[dict]) -> str
+    """Add the previous question's wording to a short follow-up.
+
+    Only the immediately preceding question is used, and only when the current
+    one is too short to retrieve on. Pulling in the previous *answer* would let
+    the guide drift away from the source and start answering from itself.
+    """
+    if not history:
+        return question
+    content_words = [
+        word for word in _words(question)
+        if word not in _STOPWORDS and len(word) > 2
+    ]
+    if len(content_words) >= 2:
+        return question
+    previous = history[-1].get("question", "")
+    return (previous + " " + question).strip() if previous else question
+
 
 _STOPWORDS = {
     "a", "about", "all", "and", "any", "are", "as", "at", "be", "been", "but", "by",

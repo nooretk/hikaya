@@ -1,5 +1,6 @@
 import { Contribution } from '../entities/contribution.entity';
 import { Location } from '../entities/location.entity';
+import { QuizQuestion } from '../entities/quiz-question.entity';
 import { Story } from '../entities/story.entity';
 
 /**
@@ -9,7 +10,9 @@ import { Story } from '../entities/story.entity';
  * is unreachable, the in-memory repositories serve this data instead, so every
  * endpoint still returns real seeded content rather than placeholders.
  *
- * Keep this file and database/seed.sql in step when either changes.
+ * Keep this file and database/seed.sql in step when either changes. The
+ * timeline and media seeds are NOT here: they are generated into
+ * generated-data.ts from the content files by ai/scripts/export_seed_data.py.
  */
 
 export const SEED_LOCATIONS: Location[] = [
@@ -165,6 +168,7 @@ export const SEED_STORIES: Story[] = [
 export const SEED_CONTRIBUTIONS: Contribution[] = [
   {
     id: 'contribution-sample-1',
+    referenceCode: 'HK-SAMPLE1',
     locationId: 'jerusalem',
     userId: null,
     categoryId: 'cat-cultural',
@@ -180,6 +184,7 @@ export const SEED_CONTRIBUTIONS: Contribution[] = [
   },
   {
     id: 'contribution-sample-2',
+    referenceCode: 'HK-SAMPLE2',
     locationId: 'bethlehem',
     userId: null,
     categoryId: 'cat-cultural',
@@ -192,5 +197,180 @@ export const SEED_CONTRIBUTIONS: Contribution[] = [
       'Personal memory, no historical claims. Approved as oral heritage.',
     reviewedAt: new Date('2026-07-19T00:00:00Z'),
     submittedAt: new Date('2026-07-18T00:00:00Z'),
+  },
+];
+
+/**
+ * Mirror of the quiz_questions rows in database/seed.sql.
+ *
+ * Every answer is stated in the reviewed content, and `sourceNote` says where,
+ * so a reader who disagrees can check rather than take the app's word for it.
+ */
+export const SEED_QUIZ: QuizQuestion[] = [
+  {
+    id: 'quiz-jer-1',
+    locationId: 'jerusalem',
+    question: 'When was the Dome of the Rock completed?',
+    options: ['335 CE', '638 CE', '691-692 CE', '1099 CE'],
+    answerIndex: 2,
+    explanation:
+      'It was built by order of the Umayyad Caliph Abd al-Malik ibn Marwan and completed in 691-692 CE.',
+    sourceNote:
+      'Timeline, Umayyad era - content/ai-ready/old-city-jerusalem-summary.md',
+    sortOrder: 0,
+  },
+  {
+    id: 'quiz-jer-2',
+    locationId: 'jerusalem',
+    question: 'Who rebuilt the walls that surround the Old City today?',
+    options: [
+      'Herod the Great',
+      'Emperor Constantine I',
+      'Caliph Umar ibn al-Khattab',
+      'Sultan Suleiman the Magnificent',
+    ],
+    answerIndex: 3,
+    explanation:
+      'The present walls were rebuilt in the 16th century CE under the Ottoman Sultan Suleiman the Magnificent. Much of what they enclose is far older.',
+    sourceNote: 'Short overview and timeline, Ottoman era',
+    sortOrder: 1,
+  },
+  {
+    id: 'quiz-jer-3',
+    locationId: 'jerusalem',
+    question: 'How many quarters does the Old City contain?',
+    options: ['Two', 'Three', 'Four', 'Eight'],
+    answerIndex: 2,
+    explanation:
+      'Four: the Muslim, Christian, Armenian and Jewish quarters. Eight is the number of historic gates.',
+    sourceNote: 'Important facts',
+    sortOrder: 2,
+  },
+  {
+    id: 'quiz-jer-4',
+    locationId: 'jerusalem',
+    question: 'When did Caliph Umar ibn al-Khattab enter Jerusalem?',
+    options: ['638 CE', '691 CE', '1099 CE', '1187 CE'],
+    answerIndex: 0,
+    explanation:
+      'He entered peacefully in 638 CE at the request of Patriarch Sophronius, and issued a covenant guaranteeing the inhabitants their lives, property and places of worship.',
+    sourceNote: 'Timeline, Islamic conquest',
+    sortOrder: 3,
+  },
+  {
+    id: 'quiz-bet-1',
+    locationId: 'bethlehem',
+    question: 'Who ordered the building of the Church of the Nativity?',
+    options: [
+      'Justinian I',
+      'Constantine I and his mother Helena',
+      'Salah al-Din al-Ayyubi',
+      'Herod the Great',
+    ],
+    answerIndex: 1,
+    explanation:
+      'Constantine I and Helena ordered it in the 4th century CE; it was completed around 339 CE. Justinian I rebuilt parts of it in the 6th century after damage.',
+    sourceNote:
+      'Timeline and main landmarks - content/ai-ready/bethlehem-summary.md',
+    sortOrder: 0,
+  },
+  {
+    id: 'quiz-bet-2',
+    locationId: 'bethlehem',
+    question: 'Roughly how far is Bethlehem from Jerusalem?',
+    options: ['About 2 km', 'About 10 km', 'About 40 km', 'About 100 km'],
+    answerIndex: 1,
+    explanation:
+      'About 10 km south of Jerusalem, on a plateau roughly 775 m above sea level.',
+    sourceNote: 'Short overview and important facts',
+    sortOrder: 1,
+  },
+  {
+    id: 'quiz-bet-3',
+    locationId: 'bethlehem',
+    question: 'Which crafts is Bethlehem best known for?',
+    options: [
+      'Glassblowing and pottery',
+      'Olive-wood carving and mother-of-pearl',
+      'Carpet weaving',
+      'Copper engraving',
+    ],
+    answerIndex: 1,
+    explanation:
+      'Olive-wood objects and mother-of-pearl work, alongside Palestinian embroidery.',
+    sourceNote: 'Cultural and religious importance',
+    sortOrder: 2,
+  },
+  {
+    id: 'quiz-bet-4',
+    locationId: 'bethlehem',
+    question:
+      "In which year was the Church of the Nativity removed from UNESCO's List of World Heritage in Danger?",
+    options: ['2012', '2015', '2019', 'It is still on the list'],
+    answerIndex: 2,
+    explanation:
+      'It was inscribed on the World Heritage List in 2012 and removed from the danger list in 2019, once the required conservation work was completed.',
+    sourceNote: 'Timeline, 2012 and 2019 entries',
+    sortOrder: 3,
+  },
+  {
+    id: 'quiz-seb-1',
+    locationId: 'sebastia',
+    question: 'Who rebuilt the city in 27 BCE and gave it the name Sebastia?',
+    options: [
+      'Pompey',
+      'Herod the Great',
+      'Emperor Augustus',
+      'Alexander the Great',
+    ],
+    answerIndex: 1,
+    explanation:
+      'Herod the Great rebuilt it and named it Sebastia, the Greek form of the title of the emperor Augustus, in his honour.',
+    sourceNote: 'Timeline, 27 BCE - content/ai-ready/sebastia-summary.md',
+    sortOrder: 0,
+  },
+  {
+    id: 'quiz-seb-2',
+    locationId: 'sebastia',
+    question: 'What was the city called before it was named Sebastia?',
+    options: ['Shomron (Samaria)', 'Neapolis', 'Caesarea', 'Sebaste'],
+    answerIndex: 0,
+    explanation:
+      'Its ancient Canaanite name was Shomron - Samaria - and it was the capital of the northern Kingdom of Israel in the 9th century BCE.',
+    sourceNote: 'Timeline, 9th century BCE',
+    sortOrder: 1,
+  },
+  {
+    id: 'quiz-seb-3',
+    locationId: 'sebastia',
+    question: 'The Mosque of Nabi Yahya was converted from which building?',
+    options: [
+      'A Roman temple',
+      'A Byzantine cathedral rebuilt by the Crusaders',
+      'An Ottoman caravanserai',
+      'A Canaanite storehouse',
+    ],
+    answerIndex: 1,
+    explanation:
+      'A cathedral was built in the Byzantine period at the site associated with John the Baptist, rebuilt by the Crusaders, and partly converted into the Mosque of Nabi Yahya under the Mamluks.',
+    sourceNote: 'Main landmarks and timeline, Ayyubid and Mamluk eras',
+    sortOrder: 2,
+  },
+  {
+    id: 'quiz-seb-4',
+    locationId: 'sebastia',
+    question:
+      'Which Roman structure at Sebastia is among the best preserved in Palestine?',
+    options: [
+      'The aqueduct',
+      'The bath house',
+      'The colonnaded street',
+      'The city forum',
+    ],
+    answerIndex: 2,
+    explanation:
+      'The colonnaded street, flanked by two rows of massive columns that once carried porticoes for merchants.',
+    sourceNote: 'Important facts and main landmarks',
+    sortOrder: 3,
   },
 ];

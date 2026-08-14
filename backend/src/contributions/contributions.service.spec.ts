@@ -2,12 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ContributionsService } from './contributions.service';
 import { LocationsService } from '../locations/locations.service';
-import { InMemoryContributionsRepository } from '../database/repositories/contributions.repository';
-import { InMemoryLocationsRepository } from '../database/repositories/locations.repository';
-import {
-  CONTRIBUTIONS_REPOSITORY,
-  LOCATIONS_REPOSITORY,
-} from '../database/repositories/tokens';
+import { IN_MEMORY_REPOSITORY_PROVIDERS } from '../testing/in-memory-providers';
 
 describe('ContributionsService', () => {
   let service: ContributionsService;
@@ -25,14 +20,7 @@ describe('ContributionsService', () => {
       providers: [
         ContributionsService,
         LocationsService,
-        {
-          provide: CONTRIBUTIONS_REPOSITORY,
-          useClass: InMemoryContributionsRepository,
-        },
-        {
-          provide: LOCATIONS_REPOSITORY,
-          useClass: InMemoryLocationsRepository,
-        },
+        ...IN_MEMORY_REPOSITORY_PROVIDERS,
       ],
     }).compile();
 
@@ -65,5 +53,47 @@ describe('ContributionsService', () => {
     const approved = await service.findApproved();
     expect(approved).toHaveLength(2);
     expect(approved.every((item) => item.status === 'approved')).toBe(true);
+  });
+
+  describe('reference codes', () => {
+    it('gives every submission a unique, readable reference code', async () => {
+      const first = await service.create(validSubmission);
+      const second = await service.create(validSubmission);
+
+      expect(first.referenceCode).toMatch(
+        /^HK-[23456789ACDEFGHJKLMNPQRSTVWXYZ]{6}$/,
+      );
+      expect(second.referenceCode).not.toBe(first.referenceCode);
+    });
+
+    it('lets a contributor check their own submission by code', async () => {
+      const created = await service.create(validSubmission);
+      const status = await service.findStatus(created.referenceCode as string);
+
+      expect(status.status).toBe('pending_review');
+      expect(status.title).toBe(validSubmission.title);
+      expect(status.message).toContain('waiting');
+      // Reviewer notes stay hidden until there is actually a decision.
+      expect(status.reviewNotes).toBeNull();
+    });
+
+    it('accepts the code in lower case and with stray spacing', async () => {
+      const created = await service.create(validSubmission);
+      const code = created.referenceCode as string;
+      const status = await service.findStatus(`  ${code.toLowerCase()} `);
+      expect(status.referenceCode).toBe(code);
+    });
+
+    it('shows the reviewer note once a decision has been made', async () => {
+      const status = await service.findStatus('HK-SAMPLE1');
+      expect(status.status).toBe('approved');
+      expect(status.reviewNotes).toContain('oral heritage');
+    });
+
+    it('throws 404 for a code that does not exist', async () => {
+      await expect(service.findStatus('HK-NOPE99')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
   });
 });

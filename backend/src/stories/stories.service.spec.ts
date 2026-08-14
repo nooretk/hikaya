@@ -1,18 +1,14 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { StoriesService } from './stories.service';
-import { InMemoryStoriesRepository } from '../database/repositories/stories.repository';
-import { STORIES_REPOSITORY } from '../database/repositories/tokens';
+import { IN_MEMORY_REPOSITORY_PROVIDERS } from '../testing/in-memory-providers';
 
 describe('StoriesService', () => {
   let service: StoriesService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        StoriesService,
-        { provide: STORIES_REPOSITORY, useClass: InMemoryStoriesRepository },
-      ],
+      providers: [StoriesService, ...IN_MEMORY_REPOSITORY_PROVIDERS],
     }).compile();
 
     service = module.get(StoriesService);
@@ -60,5 +56,59 @@ describe('StoriesService', () => {
 
     const published = await service.findByLocation('jerusalem');
     expect(published.map((story) => story.id)).not.toContain(created.id);
+  });
+
+  describe('featured and random', () => {
+    it('picks the same story of the day for a given date, and a different one later', async () => {
+      const monday = new Date('2026-08-10T09:00:00Z');
+      const first = await service.findFeatured(monday);
+      const again = await service.findFeatured(
+        new Date('2026-08-10T21:00:00Z'),
+      );
+
+      expect(first?.story.id).toBe(again?.story.id);
+      expect(first?.reason).toBe('daily-rotation');
+      expect(first?.forDate).toBe('2026-08-10');
+      expect(first?.location?.id).toBe(first?.story.locationId);
+
+      // Over a run of days the rotation must actually move.
+      const across = await Promise.all(
+        [0, 1, 2, 3].map((offset) =>
+          service.findFeatured(new Date(2026, 7, 10 + offset, 9)),
+        ),
+      );
+      expect(
+        new Set(across.map((entry) => entry?.story.id)).size,
+      ).toBeGreaterThan(1);
+    });
+
+    it('returns a random published story, avoiding the one already on screen', async () => {
+      const random = await service.findRandom('story-jerusalem-walls');
+      expect(random).not.toBeNull();
+      expect(random?.story.id).not.toBe('story-jerusalem-walls');
+      expect(random?.reason).toBe('random');
+    });
+
+    it('never features a story that is not published', async () => {
+      await service.create({
+        locationId: 'jerusalem',
+        authorId: null,
+        title: 'Draft story',
+        simplifiedStory: 'Not for readers yet.',
+        audience: 'student',
+        language: 'en',
+        tone: 'storytelling',
+        isAiGenerated: true,
+        uncertaintyNotes: [],
+        status: 'pending_review',
+      });
+
+      const seen = await Promise.all(
+        Array.from({ length: 12 }, () => service.findRandom()),
+      );
+      for (const entry of seen) {
+        expect(entry?.story.status).toBe('published');
+      }
+    });
   });
 });

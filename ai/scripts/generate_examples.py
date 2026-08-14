@@ -30,6 +30,7 @@ SAMPLES = [
     ("bethlehem", "tourist", "storytelling"),
     ("sebastia", "child", "emotional"),
     ("jerusalem", "short", "neutral"),
+    ("jerusalem", "historian", "neutral"),
 ]
 
 GUIDE_SAMPLES = [

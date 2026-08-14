@@ -1,7 +1,7 @@
 """Audience modes for story generation.
 
-Sprint 2 requires at least ``student`` and ``tourist``; ``child`` and ``short``
-are the optional extra modes. ``general`` is the balanced default.
+Sprint 2 requires at least ``student`` and ``tourist``; ``child``, ``short`` and
+``historian`` are the extra modes. ``general`` is the balanced default.
 
 Each mode carries both the instruction given to a language model and the shape
 used by the offline extractive generator, so the two backends produce
@@ -89,6 +89,22 @@ MODES = {
         landmark_items=2,
         fact_items=3,
     ),
+    "historian": AudienceMode(
+        key="historian",
+        label="Historian",
+        style=(
+            "Write for a reader who already knows the period. Use precise "
+            "terminology, keep the chronology explicit, name the sources of "
+            "authority the content gives, and mark clearly where the record is "
+            "an attribution rather than an established fact. Do not simplify."
+        ),
+        min_words=220,
+        max_words=400,
+        sections=["overview", "timeline", "importance", "landmarks", "facts"],
+        timeline_items=12,
+        landmark_items=5,
+        fact_items=6,
+    ),
     "general": AudienceMode(
         key="general",
         label="General audience",
@@ -141,6 +157,7 @@ def unsafe_terms_in(text):
 def has_unsafe_terms(text):
     # type: (str) -> bool
     return bool(_UNSAFE_RE.search(text))
+
 
 TONE_STYLE = {
     "neutral": "Keep the tone plain and factual.",

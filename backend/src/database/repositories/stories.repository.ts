@@ -5,11 +5,20 @@ import { SEED_STORIES } from '../seed/seed-data';
 
 export type NewStory = Omit<Story, 'id' | 'createdAt' | 'updatedAt'>;
 
+/** Per-location totals used for the summary shown on location cards. */
+export interface StoryStats {
+  count: number;
+  words: number;
+}
+
 export interface StoriesRepository {
   /** Published stories for a location, newest first. */
   findByLocation(locationId: string): Promise<Story[]>;
   findById(id: string): Promise<Story | null>;
   create(story: NewStory): Promise<Story>;
+  /** Every published story, used to pick the story of the day and a random one. */
+  findAllPublished(): Promise<Story[]>;
+  statsByLocation(): Promise<Record<string, StoryStats>>;
 }
 
 interface StoryRow {
@@ -73,6 +82,37 @@ export class PostgresStoriesRepository implements StoriesRepository {
     return result.rows.length ? toStory(result.rows[0]) : null;
   }
 
+  async findAllPublished(): Promise<Story[]> {
+    const result = await this.db.query<StoryRow>(
+      `SELECT * FROM stories WHERE status = 'published'
+       ORDER BY location_id, created_at DESC`,
+    );
+    return result.rows.map(toStory);
+  }
+
+  async statsByLocation(): Promise<Record<string, StoryStats>> {
+    // array_length over a whitespace split is the same word count the
+    // in-memory repository computes, so reading times agree across backends.
+    const result = await this.db.query<{
+      location_id: string;
+      count: string;
+      words: string;
+    }>(
+      `SELECT location_id,
+              COUNT(*)::text AS count,
+              COALESCE(SUM(array_length(regexp_split_to_array(trim(simplified_story), '\\s+'), 1)), 0)::text AS words
+       FROM stories
+       WHERE status = 'published'
+       GROUP BY location_id`,
+    );
+    return Object.fromEntries(
+      result.rows.map((row) => [
+        row.location_id,
+        { count: Number(row.count), words: Number(row.words) },
+      ]),
+    );
+  }
+
   async create(story: NewStory): Promise<Story> {
     const result = await this.db.query<StoryRow>(
       `INSERT INTO stories
@@ -122,6 +162,27 @@ export class InMemoryStoriesRepository implements StoriesRepository {
     return Promise.resolve(
       this.stories.find((story) => story.id === id) ?? null,
     );
+  }
+
+  findAllPublished(): Promise<Story[]> {
+    return Promise.resolve(
+      this.stories.filter((story) => story.status === 'published'),
+    );
+  }
+
+  statsByLocation(): Promise<Record<string, StoryStats>> {
+    const stats: Record<string, StoryStats> = {};
+    for (const story of this.stories) {
+      if (story.status !== 'published') continue;
+      const entry = stats[story.locationId] ?? { count: 0, words: 0 };
+      entry.count += 1;
+      entry.words += story.simplifiedStory
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length;
+      stats[story.locationId] = entry;
+    }
+    return Promise.resolve(stats);
   }
 
   create(story: NewStory): Promise<Story> {

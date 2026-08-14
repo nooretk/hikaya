@@ -1,5 +1,6 @@
 import {
   IsEmail,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -47,9 +48,20 @@ export class CreateContributionDto {
   @IsEmail()
   contributorEmail?: string;
 
+  /**
+   * Link to a photograph, recording or video that belongs with the memory.
+   *
+   * A URL rather than an upload: Hikaya has no file storage yet, and accepting
+   * uploads it cannot keep would lose people's material. See the gaps section
+   * of docs/sprint-2-report.md.
+   */
   @IsOptional()
   @IsUrl()
   mediaUrl?: string;
+
+  @IsOptional()
+  @IsIn(['image', 'audio', 'video'])
+  mediaType?: 'image' | 'audio' | 'video';
 
   @IsOptional()
   @IsString()

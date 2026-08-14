@@ -102,6 +102,7 @@ With PostgreSQL (optional but recommended):
 createdb hikaya
 psql -d hikaya -f database/schema.sql
 psql -d hikaya -f database/seed.sql
+psql -d hikaya -f database/seed-generated.sql
 # then set DATABASE_URL in backend/.env
 ```
 
@@ -132,8 +133,8 @@ the response.
 Testing each part alone:
 
 ```bash
-cd ai      && python3 -m unittest discover -s tests     # 26 tests
-cd backend && npm test                                  # 21 tests
+cd ai      && python3 -m unittest discover -s tests     # 30 tests
+cd backend && npm test                                  # 40 tests
 cd frontend&& npm run lint && npm run build
 ```
 
@@ -170,11 +171,21 @@ content/ai-ready/old-city-jerusalem-summary.md
         │  frontmatter: location_id, name, coordinates, reviewed
         │  eight fixed sections, with facts / religious traditions /
         │  oral heritage kept apart
-        ▼
-ai/service/content_loader.py    the only door facts enter through
-        ▼
-ai/service/generator.py         prompt built from this file alone
+        ├──────────────────────────────┐
+        ▼                              ▼
+ai/service/content_loader.py    ai/scripts/export_seed_data.py
+  the only door facts             also reads content/media/media.json
+  enter through                   and content/quiz/quiz.json
+        ▼                              ▼
+ai/service/generator.py         database/seed-generated.sql
+  prompt built from               backend/.../generated-data.ts
+  this file alone                 frontend/.../generatedMockData.ts
 ```
+
+The timeline, gallery and quiz have to exist at three layers for the system to
+work offline everywhere. One script generates all three from the content files
+and validates them, so they cannot drift apart - and so the frontend's "sample"
+timeline can never contradict the real one.
 
 If a location has no reviewed summary, generation fails with `unknown_location`
 rather than falling back to whatever a model happens to know. That refusal is the

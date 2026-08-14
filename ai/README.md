@@ -74,6 +74,7 @@ the moment a key is available.
 | `tourist` | a visitor standing at the site | 160–300 words |
 | `child` | roughly ages 8–11, simple sentences | 90–170 words |
 | `short` | a summary of at most five sentences | 45–110 words |
+| `historian` | a reader who knows the period; full chronology, no simplifying | 220–400 words |
 | `general` | default balanced register | 150–280 words |
 
 `child` mode additionally drops any material mentioning sieges, destruction, war
@@ -92,7 +93,7 @@ ai/
 │   ├── __init__.py                    # public surface: generate_story, answer_question
 │   ├── models.py                      # request/response shapes, validation, error codes
 │   ├── content_loader.py              # parses content/ai-ready/*.md
-│   ├── audiences.py                   # the five modes + child-unsafe vocabulary
+│   ├── audiences.py                   # the six modes + child-unsafe vocabulary
 │   ├── prompts.py                     # system + per-request prompts
 │   ├── generator.py                   # the story generation function
 │   ├── fact_guard.py                  # post-generation check
@@ -101,9 +102,12 @@ ai/
 │   ├── app.py                         # FastAPI service
 │   ├── server.py                      # dependency-free HTTP service
 │   └── cli.py                         # command line
-├── scripts/generate_examples.py       # regenerates ai/examples/
+├── scripts/
+│   ├── generate_examples.py           # regenerates ai/examples/
+│   └── export_seed_data.py            # generates + validates the database, backend
+│                                      # and frontend seeds from content/
 ├── examples/                          # sample stories, one per MVP location
-└── tests/test_generator.py            # 26 tests, standard library only
+└── tests/test_generator.py            # 30 tests, standard library only
 ```
 
 ## Using It From Python
@@ -124,8 +128,8 @@ print(response.warnings)            # what the fact guard flagged, if anything
 
 ## Samples
 
-`examples/` holds one generated sample per MVP location, plus a short-mode sample
-and a set of Heritage Guide questions. Each sample records the input location,
+`examples/` holds one generated sample per MVP location, plus short-mode and
+historian-mode samples and a set of Heritage Guide questions. Each sample records the input location,
 target audience, the generated story, and the notes about limitations and missing
 information. They are regenerated, never hand-edited:
 
@@ -140,4 +144,18 @@ cd ai && python3 scripts/generate_examples.py
   `unsupported_language`.
 - Contribution analysis — summarising user submissions and suggesting a category
   before human review.
-- Audio narration.
+
+## The Heritage Guide's Offline Limits
+
+Without a model configured, `ask-guide` is a keyword retriever. It never invents -
+it returns sentences that exist in the reviewed content - but it can still return
+a loosely related passage. Two rules keep it honest:
+
+- a question whose content words are mostly absent from the records gets a refusal
+  rather than an answer ("the best falafel shop here" used to come back with the
+  city gates, because *best* appears in *best known*);
+- when only part of a question matched, the response says which words were missing.
+
+A follow-up question is understood by folding the previous question into it. Earlier
+turns are context for reading the question and never a source of facts - there is a
+test asserting a fabricated previous answer cannot leak into a new one.

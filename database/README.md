@@ -7,7 +7,8 @@ PostgreSQL implementation of the Hikaya data model.
 | File | Purpose |
 |---|---|
 | `schema.sql` | The PostgreSQL implementation — tables, keys, constraints, indexes, triggers. Run this first. |
-| `seed.sql` | Seed data for the three MVP locations. Run this second. |
+| `seed.sql` | Hand-written seed: users, categories, locations, stories, contributions. Run this second. |
+| `seed-generated.sql` | **Generated** seed: timeline, media and quiz rows. Run this third. Produced by `python3 ai/scripts/export_seed_data.py` from the content files — do not edit it. |
 | `schema-draft.md` | The Sprint 1 design draft that `schema.sql` implements. Kept for reference. |
 | `HikayaSchema.png` | ER diagram of the draft. |
 
@@ -21,6 +22,7 @@ PostgreSQL **13 or newer** — `schema.sql` uses the built-in `gen_random_uuid()
 createdb hikaya
 psql -d hikaya -f database/schema.sql
 psql -d hikaya -f database/seed.sql
+psql -d hikaya -f database/seed-generated.sql
 ```
 
 Then point the backend at it in `backend/.env`:
@@ -29,7 +31,7 @@ Then point the backend at it in `backend/.env`:
 DATABASE_URL=postgresql://<user>:<password>@localhost:5432/hikaya
 ```
 
-Both scripts are re-runnable. `schema.sql` drops and recreates the MVP tables, so
+All three scripts are re-runnable. `schema.sql` drops and recreates the MVP tables, so
 running it again resets everything — do not run it against a database holding real
 user contributions.
 
@@ -48,8 +50,10 @@ psql -d hikaya -c "SELECT id, name, city FROM locations ORDER BY id;"
 | `categories` | Content categories (historical, religious, archaeological, cultural). |
 | `location_categories` | Many-to-many join between locations and categories. |
 | `stories` | Narratives for a location — editor-written or AI-generated. |
-| `media` | Media *metadata*. No media files are stored in this repository. |
-| `contributions` | User-submitted memories, awaiting review. |
+| `media` | Media *metadata* with credit, licence and era. No media files are stored in this repository. |
+| `timeline_events` | The historical timeline shown per location, with tradition-based entries flagged. |
+| `quiz_questions` | Comprehension questions, each carrying the source its answer comes from. |
+| `contributions` | User-submitted memories, awaiting review, each with a reference code. |
 
 ### Relationships
 
@@ -99,8 +103,12 @@ which use readable ids so the seed file is easy to follow.
   its content file and AI-ready summary.
 - **4 categories** and their location links.
 - **3 published stories**, one per location, written from the reviewed summaries.
-- **7 media records** — Wikimedia Commons categories and UNESCO entries, each with its
-  licence recorded.
+- **23 photographs** of the actual sites from Wikimedia Commons, each with its
+  subject, credit, licence, capture date and source page. Includes Library of
+  Congress plates and an 1842-44 daguerreotype of Sebastia.
+- **35 timeline events** generated from the AI-ready summaries, with entries that
+  rest on tradition rather than documented history flagged.
+- **12 quiz questions**, each naming where in the reviewed content its answer comes from.
 - **2 approved sample contributions** so the memories view is not empty on a fresh install.
 - **2 editor users** with `password_hash` left NULL — no credentials are committed.
 
@@ -114,4 +122,14 @@ seeded with the same data as `seed.sql` (`backend/src/database/seed/seed-data.ts
 every endpoint still returns real seeded content. See
 [`backend/README.md`](../backend/README.md).
 
-Keep `seed-data.ts` and `seed.sql` in step when either changes.
+Keep `seed-data.ts` and `seed.sql` in step when either changes. The timeline,
+media and quiz seeds need no such care: one script regenerates the PostgreSQL,
+backend and frontend copies together from the content files.
+
+```bash
+python3 ai/scripts/export_seed_data.py
+```
+
+It also validates what it generates — a photograph dated before 1990 cannot be
+marked "modern", a before/after pair must show the same subject, and every image
+must carry a credit and a licence.

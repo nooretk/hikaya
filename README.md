@@ -33,6 +33,7 @@ With PostgreSQL (optional, recommended):
 createdb hikaya
 psql -d hikaya -f database/schema.sql
 psql -d hikaya -f database/seed.sql
+psql -d hikaya -f database/seed-generated.sql
 echo 'DATABASE_URL=postgresql://user:password@localhost:5432/hikaya' >> backend/.env
 ```
 
@@ -55,14 +56,22 @@ Each folder has its own README.
 
 ---
 
-## MVP Features
+## Features
 
-- Interactive map of documented Palestinian locations
-- Location details with reviewed historical content
-- AI-generated stories in student, tourist, child and short modes
-- AI Heritage Guide answering questions from reviewed content only
-- User contribution form with an editorial review queue
-- Sample heritage content for three locations: the Old City of Jerusalem,
+- Interactive map with category filters, a legend, and your visited sites marked
+- A location page per site: story, guide, historical timeline, photograph
+  gallery, quiz, and the memories people have contributed
+- AI-generated stories in student, tourist, child, historian and short modes,
+  chosen through an Audience → Style → Generate flow
+- Read-aloud narration that highlights the word being spoken
+- An AI Heritage Guide that answers from reviewed content only, keeps the thread
+  of a conversation, and says when it does not know
+- A then-and-now slider where the archive holds a matching historical photograph
+- Contribution wizard with a reference code, so an anonymous contributor can
+  check what happened to their memory
+- A heritage quiz whose answers cite where in the content they come from
+- The archive drawn as a constellation of shared themes and attached memories
+- Reviewed heritage content for three locations: the Old City of Jerusalem,
   Bethlehem and Sebastia
 
 ## Technology
@@ -92,10 +101,13 @@ That is enforced, not just stated:
 - Gaps come back as uncertainty notes shown next to the story.
 - Generated stories and user contributions both land in a review queue. Neither
   reaches a reader without an editor.
+- Photographs are real pictures of the actual sites, each shown with its
+  photographer and licence. A then-and-now comparison is only offered where the
+  archive holds two photographs of the *same* subject.
 
 ---
 
-## Current Status — Sprint 2 complete
+## Current Status
 
 The first integrated prototype works end to end: the frontend reads live data from the
 backend, the backend reads PostgreSQL, and story generation runs through the AI module
@@ -107,8 +119,9 @@ sentences, the frontend to bundled sample data behind a visible banner. No fallb
 pretends to be the real thing.
 
 What is not built yet: the editor review interface, Arabic output, authentication, and
-media upload. See [`docs/sprint-2-report.md`](docs/sprint-2-report.md) for the full
-account, including known gaps.
+media upload. See [`docs/sprint-2-report.md`](docs/sprint-2-report.md) for the Sprint 2
+account and [`docs/improvements.md`](docs/improvements.md) for what each feature does,
+what was deliberately done differently from the brief, and why.
 
 ---
 

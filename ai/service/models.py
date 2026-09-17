@@ -10,8 +10,8 @@ from dataclasses import dataclass, field, asdict
 from typing import Any, Dict, List, Optional
 
 # Audience modes supported by the generator. 'student' and 'tourist' are the two
-# required Sprint 2 modes; 'child' and 'short' are the optional extras.
-AUDIENCES = ("student", "tourist", "child", "short", "general")
+# required Sprint 2 modes; 'child', 'short' and 'historian' are the extras.
+AUDIENCES = ("student", "tourist", "child", "short", "historian", "general")
 
 TONES = ("neutral", "educational", "emotional", "storytelling")
 
@@ -32,6 +32,9 @@ ERR_CONTENT_TOO_LONG = "content_too_long"
 ERR_GENERATION_FAILED = "generation_failed"
 
 MAX_INPUT_CHARS = 60000
+
+# Earlier conversation turns kept for a follow-up question.
+MAX_HISTORY_TURNS = 6
 
 
 class ValidationError(Exception):
@@ -163,12 +166,20 @@ def error_response(code: str, message: str) -> StoryResponse:
 
 @dataclass
 class GuideRequest:
-    """Input for the Heritage Guide question-answering feature."""
+    """Input for the Heritage Guide question-answering feature.
+
+    ``history`` carries earlier turns of the same conversation as
+    ``{"question": ..., "answer": ...}`` entries, oldest first. It exists so a
+    follow-up like "and when was that?" can be resolved against what was just
+    discussed. It never becomes a source of facts - answers still come only
+    from the reviewed content.
+    """
 
     question: str = ""
     location_id: Optional[str] = None
     historical_text: Optional[str] = None
     language: str = "en"
+    history: List[Dict[str, str]] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, payload: Dict[str, Any]) -> "GuideRequest":
@@ -190,6 +201,10 @@ class GuideRequest:
                 ERR_MISSING_CONTENT,
                 "Either location_id or historical_text is required.",
             )
+        if len(self.history) > MAX_HISTORY_TURNS:
+            # Keeping the tail is enough for pronoun resolution and bounds the
+            # prompt an untrusted caller can build.
+            self.history = self.history[-MAX_HISTORY_TURNS:]
 
 
 @dataclass

@@ -16,6 +16,8 @@
 
 BEGIN;
 
+DELETE FROM quiz_questions;
+DELETE FROM timeline_events;
 DELETE FROM contributions;
 DELETE FROM media;
 DELETE FROM stories;
@@ -59,7 +61,7 @@ VALUES
     31.778000,
     35.235400,
     'One of the oldest continuously inhabited cities in the world. Roughly 0.9 km² inside Ottoman walls built under Sultan Suleiman the Magnificent, with eight historic gates, four quarters, and more than 220 historical monuments. Inscribed on the UNESCO World Heritage List in 1981.',
-    'https://images.unsplash.com/photo-1542856391-010fb87dcfed?auto=format&fit=crop&q=80&w=1200',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/18405-Jerusalem-Pano_%2828887202772%29.jpg?width=1600',
     'content/oldCity.md',
     'content/ai-ready/old-city-jerusalem-summary.md',
     TRUE
@@ -73,7 +75,7 @@ VALUES
     31.705400,
     35.202400,
     'A historic Palestinian city about 10 km south of Jerusalem, roughly 775 m above sea level. Known worldwide for the Church of the Nativity, completed around 339 CE and World Heritage listed in 2012, and for its olive-wood and mother-of-pearl crafts.',
-    'https://images.unsplash.com/photo-1590076212879-11ef849646b5?auto=format&fit=crop&q=80&w=1200',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Church_of_the_Nativity%2C_2019_%2801%29.jpg?width=1600',
     'content/beth.md',
     'content/ai-ready/bethlehem-summary.md',
     TRUE
@@ -87,7 +89,7 @@ VALUES
     32.275800,
     35.197200,
     'An archaeological site about 12 km north-west of Nablus on a hill some 440 m above sea level. Capital of the northern Kingdom of Israel in the 9th century BCE, rebuilt by Herod the Great in 27 BCE and renamed after Emperor Augustus. Holds one of the best-preserved Roman streets in Palestine.',
-    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=1200',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Columned_street_-_panoramio.jpg?width=1600',
     'content/sebastia.md',
     'content/ai-ready/sebastia-summary.md',
     TRUE
@@ -168,47 +170,18 @@ VALUES
   );
 
 -- -----------------------------------------------------------------------------
--- media
+-- media, timeline_events and quiz_questions
 -- -----------------------------------------------------------------------------
--- Metadata only - Hikaya stores no media files. See content/README.md for the
--- rule on licensing every referenced asset.
+-- All three are GENERATED from the reviewed content, so they live in
+-- database/seed-generated.sql rather than here. Run it after this file:
+--
+--   psql -d hikaya -f database/seed-generated.sql
+--
+-- Regenerate it after editing content/ai-ready/*.md, content/media/media.json
+-- or content/quiz/quiz.json:
+--
+--   python3 ai/scripts/export_seed_data.py
 -- -----------------------------------------------------------------------------
-INSERT INTO media (id, location_id, type, url, description, license, source_url) VALUES
-  ('media-jerusalem-1', 'jerusalem', 'image',
-   'https://commons.wikimedia.org/wiki/Category:Old_City_of_Jerusalem',
-   'Photograph collection of the Old City of Jerusalem.',
-   'Varies per file - see Wikimedia Commons',
-   'https://commons.wikimedia.org/wiki/Category:Old_City_of_Jerusalem'),
-  ('media-jerusalem-2', 'jerusalem', 'image',
-   'https://commons.wikimedia.org/wiki/Category:Dome_of_the_Rock',
-   'Photograph collection of the Dome of the Rock, completed 691-692 CE.',
-   'Varies per file - see Wikimedia Commons',
-   'https://commons.wikimedia.org/wiki/Category:Dome_of_the_Rock'),
-  ('media-jerusalem-3', 'jerusalem', 'document',
-   'https://whc.unesco.org/en/list/148/',
-   'UNESCO World Heritage Centre entry for the Old City of Jerusalem and its Walls.',
-   'UNESCO terms of use',
-   'https://whc.unesco.org/en/list/148/'),
-  ('media-bethlehem-1', 'bethlehem', 'image',
-   'https://commons.wikimedia.org/wiki/Category:Church_of_the_Nativity',
-   'Photograph collection of the Church of the Nativity.',
-   'Varies per file - see Wikimedia Commons',
-   'https://commons.wikimedia.org/wiki/Category:Church_of_the_Nativity'),
-  ('media-bethlehem-2', 'bethlehem', 'document',
-   'https://whc.unesco.org/en/list/1433/',
-   'UNESCO World Heritage Centre entry: Birthplace of Jesus, Church of the Nativity and the Pilgrimage Route.',
-   'UNESCO terms of use',
-   'https://whc.unesco.org/en/list/1433/'),
-  ('media-sebastia-1', 'sebastia', 'image',
-   'https://commons.wikimedia.org/wiki/Category:Sebastia,_Nablus',
-   'Photograph collection of Sebastia and its Roman remains.',
-   'Varies per file - see Wikimedia Commons',
-   'https://commons.wikimedia.org/wiki/Category:Sebastia,_Nablus'),
-  ('media-sebastia-2', 'sebastia', 'document',
-   'https://whc.unesco.org/en/tentativelists/state=ps',
-   'UNESCO tentative list entries for Palestine.',
-   'UNESCO terms of use',
-   'https://whc.unesco.org/en/tentativelists/state=ps');
 
 -- -----------------------------------------------------------------------------
 -- contributions
@@ -218,11 +191,12 @@ INSERT INTO media (id, location_id, type, url, description, license, source_url)
 -- arrive as 'pending_review'.
 -- -----------------------------------------------------------------------------
 INSERT INTO contributions
-  (id, location_id, user_id, category_id, title, content, contributor_name,
+  (id, reference_code, location_id, user_id, category_id, title, content, contributor_name,
    contributor_email, media_url, status, review_notes, reviewed_at, submitted_at)
 VALUES
   (
     'contribution-sample-1',
+    'HK-SAMPLE1',
     'jerusalem',
     NULL,
     'cat-cultural',
@@ -238,6 +212,7 @@ VALUES
   ),
   (
     'contribution-sample-2',
+    'HK-SAMPLE2',
     'bethlehem',
     NULL,
     'cat-cultural',

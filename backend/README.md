@@ -31,6 +31,7 @@ To use PostgreSQL (13+):
 createdb hikaya
 psql -d hikaya -f ../database/schema.sql
 psql -d hikaya -f ../database/seed.sql
+psql -d hikaya -f ../database/seed-generated.sql
 ```
 
 then set `DATABASE_URL` in `.env`.
@@ -76,12 +77,20 @@ where the data came from.
 |---|---|---|
 | `GET` | `/api/v1` | API description and endpoint list |
 | `GET` | `/api/v1/health` | Data source and AI service in use |
-| `GET` | `/api/v1/locations` | All published locations |
+| `GET` | `/api/v1/locations` | All published locations, each with story/photo/timeline/memory counts and a reading time |
 | `GET` | `/api/v1/locations/:id` | One location by slug |
+| `GET` | `/api/v1/locations/:id/media` | Gallery images, each with credit and licence |
+| `GET` | `/api/v1/locations/:id/before-after` | Historical/present pair of the same subject, or `null` with a reason |
+| `GET` | `/api/v1/locations/:id/timeline` | Historical timeline, tradition-based entries flagged |
+| `GET` | `/api/v1/locations/:id/quiz` | Comprehension questions, each citing its source |
+| `GET` | `/api/v1/locations/:id/related` | Locations sharing a category |
 | `GET` | `/api/v1/stories/:locationId` | Published stories for a location |
 | `GET` | `/api/v1/stories/location/:locationId` | Same, explicit form |
 | `GET` | `/api/v1/stories/detail/:id` | One story by id |
+| `GET` | `/api/v1/stories/featured` | The story of the day |
+| `GET` | `/api/v1/stories/random` | A random published story (`?exclude=` to skip one) |
 | `GET` | `/api/v1/contributions` | Approved contributions (`?locationId=` to filter) |
+| `GET` | `/api/v1/contributions/status/:code` | Review status by reference code |
 | `POST` | `/api/v1/contributions` | Submit a contribution for review |
 | `POST` | `/api/v1/ai/generate-story` | Generate a narrative from reviewed content |
 | `POST` | `/api/v1/ai/ask-guide` | Ask the heritage guide a question |
@@ -108,14 +117,25 @@ curl -s localhost:3000/api/v1/locations
     "latitude": 31.7054,
     "longitude": 35.2024,
     "description": "A historic Palestinian city about 10 km south of Jerusalem...",
-    "coverImageUrl": "https://images.unsplash.com/photo-1590076212879-...",
+    "coverImageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Church_of_the_Nativity%2C_2019_%2801%29.jpg?width=1600",
     "contentFile": "content/beth.md",
     "aiSummaryFile": "content/ai-ready/bethlehem-summary.md",
     "categories": ["Cultural Heritage", "Historical Landmark", "Religious Landmark"],
-    "isPublished": true
+    "isPublished": true,
+    "stats": {
+      "storyCount": 1,
+      "imageCount": 7,
+      "timelineEventCount": 12,
+      "memoryCount": 1,
+      "readingTimeMinutes": 2
+    }
   }
 ]
 ```
+
+`stats` is what the location cards show, so a reader knows what is waiting inside
+before opening the page. It comes from four grouped queries rather than one per
+location, so the cost does not grow with the archive.
 
 Unknown slugs return `404`:
 
@@ -158,7 +178,7 @@ curl -s -X POST localhost:3000/api/v1/ai/generate-story \
 |---|---|---|
 | `locationId` | yes* | Location slug |
 | `historicalText` | yes* | Reviewed text, when it is not yet in the repository |
-| `targetAudience` | no | `student` \| `tourist` \| `child` \| `short` \| `general` |
+| `targetAudience` | no | `student` \| `tourist` \| `child` \| `short` \| `historian` \| `general` |
 | `tone` | no | `neutral` \| `educational` \| `emotional` \| `storytelling` |
 | `language` | no | `en` |
 | `maxWords` | no | 40–600 |
@@ -215,7 +235,8 @@ curl -s -X POST localhost:3000/api/v1/contributions \
 ```json
 {
   "status": "pending_review",
-  "message": "Thank you - your contribution was received and is waiting for review before it is published.",
+  "message": "Thank you - your memory was received and is waiting for review before it is published. Keep the reference code below if you want to check on it later.",
+  "referenceCode": "HK-7Q4M2X",
   "contribution": {
     "id": "0cbc5287-...",
     "locationId": "bethlehem",
@@ -229,6 +250,15 @@ curl -s -X POST localhost:3000/api/v1/contributions \
 No account is needed. Every submission lands as `pending_review` and is invisible to
 `GET /contributions` until approved. `content` must be at least 20 characters; an
 unknown `locationId` returns `404`.
+
+The `referenceCode` is how an anonymous contributor finds their memory again:
+
+```bash
+curl -s localhost:3000/api/v1/contributions/status/HK-7Q4M2X
+```
+
+It returns the status, a plain-language explanation of what happens next, and the
+reviewer's note once a decision has been made.
 
 ## Running Without PostgreSQL
 
@@ -278,9 +308,11 @@ both data sources.
 npm test
 ```
 
-21 unit tests over the in-memory repositories: seeded data is real and complete,
-review status is enforced, unknown ids 404, and the AI client handles success,
-service failure and error payloads.
+40 unit tests over the in-memory repositories: seeded data is real and complete,
+review status is enforced, unknown ids 404, the AI client handles success,
+service failure and error payloads, the daily story rotation is stable for a
+given date, before/after pairs only form from matching subjects, and contribution
+reference codes are unique and case-insensitive to look up.
 
 ## Related
 

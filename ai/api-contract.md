@@ -72,7 +72,7 @@ Base URL is configured in the backend as `AI_SERVICE_URL` (default
 | `location_id` | string | yes* | — | Slug matching `content/ai-ready/*.md` frontmatter and `locations.id` in the database. |
 | `location_name` | string | no | from content | Display name; only used for the title when content is supplied inline. |
 | `historical_text` | string | yes* | `null` | Reviewed source text. Max 60 000 characters. |
-| `target_audience` | string | no | `general` | `student` \| `tourist` \| `child` \| `short` \| `general`. |
+| `target_audience` | string | no | `general` | `student` \| `tourist` \| `child` \| `short` \| `historian` \| `general`. |
 | `language` | string | no | `en` | Only `en` is implemented. Anything else returns `unsupported_language`. |
 | `tone` | string | no | `storytelling` | `neutral` \| `educational` \| `emotional` \| `storytelling`. |
 | `is_reviewed` | boolean | no | `true` | `false` is rejected outright — the module refuses unreviewed material. |
@@ -149,12 +149,20 @@ one shape either way.
 
 ```json
 {
-  "question": "When was the Dome of the Rock completed?",
+  "question": "And when was that?",
   "location_id": "jerusalem",
   "historical_text": null,
-  "language": "en"
+  "language": "en",
+  "history": [
+    { "question": "Tell me about the Dome of the Rock",
+      "answer": "Dome of the Rock - completed 691-692 CE ..." }
+  ]
 }
 ```
+
+`history` carries earlier turns of the same conversation, oldest first, capped at
+six. It exists so a short follow-up can be understood — it is **never** a source
+of facts, and answers still come only from the reviewed content.
 
 ### 4.2 Response
 

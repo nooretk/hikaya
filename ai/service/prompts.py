@@ -5,7 +5,7 @@ instruction is fixed and not user-editable; only the source content and the
 generation parameters vary.
 """
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from . import audiences
 
@@ -92,12 +92,29 @@ def build_story_prompt(content_text, location_name, audience, language, tone,
     return "\n".join(parts)
 
 
-def build_guide_prompt(content_text, location_name, question, language):
-    # type: (str, str, str, str) -> str
-    """Populate the Heritage Guide Q&A prompt (workflow doc, Section 4.3)."""
-    return "\n".join([
+def build_guide_prompt(content_text, location_name, question, language, history=None):
+    # type: (str, str, str, str, Optional[List[Dict[str, str]]]) -> str
+    """Populate the Heritage Guide Q&A prompt (workflow doc, Section 4.3).
+
+    Earlier turns are included so a follow-up question can be understood, with
+    an explicit instruction that they are context only - the answer still has to
+    come out of the Source Content.
+    """
+    parts = [
         "Location: %s" % location_name,
         "Language: %s" % language,
+    ]
+
+    if history:
+        parts.extend([
+            "",
+            "Conversation so far (context only - NOT a source of facts):",
+        ])
+        for turn in history:
+            parts.append("  Visitor: %s" % turn.get("question", ""))
+            parts.append("  Guide: %s" % turn.get("answer", ""))
+
+    parts.extend([
         "",
         "Source Content (reviewed, use only this):",
         '"""',
@@ -106,3 +123,4 @@ def build_guide_prompt(content_text, location_name, question, language):
         "",
         "User Question: %s" % question,
     ])
+    return "\n".join(parts)

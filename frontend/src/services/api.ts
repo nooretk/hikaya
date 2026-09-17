@@ -1,18 +1,31 @@
 import {
   ApiContribution,
   ApiLocation,
+  ApiMedia,
+  ApiQuizQuestion,
   ApiStory,
+  ApiTimelineEvent,
   AudienceMode,
+  BeforeAfterResponse,
+  ChatTurn,
   ContributionReceipt,
+  ContributionStatus,
   DataSource,
+  FeaturedStory,
   GeneratedStory,
+  GuideAnswer,
   NewContribution,
+  StoryTone,
 } from "../types";
 import {
   MOCK_CONTRIBUTIONS,
   MOCK_LOCATIONS,
+  MOCK_MEDIA,
+  MOCK_QUIZ,
   MOCK_STORIES,
+  MOCK_TIMELINE,
   mockGeneratedStory,
+  mockGuideAnswer,
 } from "../mocks/mockApiData";
 
 /**
@@ -111,7 +124,7 @@ async function withFallback<T>(
   }
 }
 
-// --- Reads -------------------------------------------------------------------
+// --- Locations ---------------------------------------------------------------
 
 export function getLocations(): Promise<ApiResult<ApiLocation[]>> {
   return withFallback(
@@ -138,12 +151,108 @@ export async function getLocation(id: string): Promise<ApiResult<ApiLocation | n
   }
 }
 
+export function getMedia(locationId: string): Promise<ApiResult<ApiMedia[]>> {
+  return withFallback(
+    () => request<ApiMedia[]>(`/locations/${locationId}/media`),
+    () => MOCK_MEDIA.filter((item) => item.locationId === locationId),
+  );
+}
+
+export function getBeforeAfter(
+  locationId: string,
+): Promise<ApiResult<BeforeAfterResponse>> {
+  return withFallback(
+    () => request<BeforeAfterResponse>(`/locations/${locationId}/before-after`),
+    () => {
+      const images = MOCK_MEDIA.filter((item) => item.locationId === locationId);
+      const before = images.find((item) => item.pairRole === "before");
+      const after = images.find((item) => item.pairRole === "after");
+      return before && after
+        ? { pair: { before, after } }
+        : {
+            pair: null,
+            reason:
+              "No historical photograph of the same subject has been added for this location yet.",
+          };
+    },
+  );
+}
+
+export function getTimeline(
+  locationId: string,
+): Promise<ApiResult<ApiTimelineEvent[]>> {
+  return withFallback(
+    () => request<ApiTimelineEvent[]>(`/locations/${locationId}/timeline`),
+    () => MOCK_TIMELINE.filter((event) => event.locationId === locationId),
+  );
+}
+
+export function getQuiz(locationId: string): Promise<ApiResult<ApiQuizQuestion[]>> {
+  return withFallback(
+    () => request<ApiQuizQuestion[]>(`/locations/${locationId}/quiz`),
+    () => MOCK_QUIZ.filter((question) => question.locationId === locationId),
+  );
+}
+
+export function getRelated(locationId: string): Promise<ApiResult<ApiLocation[]>> {
+  return withFallback(
+    () => request<ApiLocation[]>(`/locations/${locationId}/related`),
+    () => {
+      const location = MOCK_LOCATIONS.find((item) => item.id === locationId);
+      if (!location) return [];
+      const categories = new Set(location.categories);
+      return MOCK_LOCATIONS.filter(
+        (candidate) =>
+          candidate.id !== locationId &&
+          candidate.categories.some((category) => categories.has(category)),
+      );
+    },
+  );
+}
+
+// --- Stories -----------------------------------------------------------------
+
 export function getStories(locationId: string): Promise<ApiResult<ApiStory[]>> {
   return withFallback(
     () => request<ApiStory[]>(`/stories/${locationId}`),
     () => MOCK_STORIES.filter((story) => story.locationId === locationId),
   );
 }
+
+/** The story of the day - the same one for everybody, changing daily. */
+export function getFeaturedStory(): Promise<ApiResult<FeaturedStory>> {
+  return withFallback(
+    () => request<FeaturedStory>("/stories/featured"),
+    () => {
+      const index = Math.floor(Date.now() / 86_400_000) % MOCK_STORIES.length;
+      const story = MOCK_STORIES[index];
+      return {
+        story,
+        location: MOCK_LOCATIONS.find((item) => item.id === story.locationId) ?? null,
+        reason: "daily-rotation" as const,
+        forDate: new Date().toISOString().slice(0, 10),
+      };
+    },
+  );
+}
+
+export function getRandomStory(excludeId?: string): Promise<ApiResult<FeaturedStory>> {
+  const query = excludeId ? `?exclude=${encodeURIComponent(excludeId)}` : "";
+  return withFallback(
+    () => request<FeaturedStory>(`/stories/random${query}`),
+    () => {
+      const pool = MOCK_STORIES.filter((story) => story.id !== excludeId);
+      const story = pool[Math.floor(Math.random() * pool.length)];
+      return {
+        story,
+        location: MOCK_LOCATIONS.find((item) => item.id === story.locationId) ?? null,
+        reason: "random" as const,
+      };
+    },
+  );
+}
+
+// --- Contributions -----------------------------------------------------------
 
 export function getContributions(
   locationId?: string,
@@ -158,12 +267,39 @@ export function getContributions(
   );
 }
 
+/**
+ * Submits a contribution. Deliberately has no mock fallback: the caller must
+ * see a real failure rather than a fake receipt.
+ *
+ * @throws ApiError when the backend rejects the submission or is unreachable.
+ */
+export function submitContribution(
+  contribution: NewContribution,
+): Promise<ContributionReceipt> {
+  return request<ContributionReceipt>("/contributions", {
+    method: "POST",
+    body: JSON.stringify(contribution),
+  });
+}
+
+/**
+ * Looks up a submission by its reference code. No fallback either - inventing a
+ * status for someone's memory would be worse than saying the service is down.
+ *
+ * @throws ApiError with status 404 when the code is unknown.
+ */
+export function getContributionStatus(code: string): Promise<ContributionStatus> {
+  return request<ContributionStatus>(
+    `/contributions/status/${encodeURIComponent(code.trim())}`,
+  );
+}
+
 // --- AI ----------------------------------------------------------------------
 
 export function generateStory(
   locationId: string,
   targetAudience: AudienceMode,
-  tone = "storytelling",
+  tone: StoryTone = "storytelling",
 ): Promise<ApiResult<GeneratedStory>> {
   return withFallback(
     () =>
@@ -185,21 +321,23 @@ export function generateStory(
   );
 }
 
-// --- Writes ------------------------------------------------------------------
-
-/**
- * Submits a contribution. Deliberately has no mock fallback: the caller must
- * see a real failure rather than a fake receipt.
- *
- * @throws ApiError when the backend rejects the submission or is unreachable.
- */
-export function submitContribution(
-  contribution: NewContribution,
-): Promise<ContributionReceipt> {
-  return request<ContributionReceipt>("/contributions", {
-    method: "POST",
-    body: JSON.stringify(contribution),
-  });
+export function askGuide(
+  locationId: string,
+  question: string,
+  history: ChatTurn[] = [],
+): Promise<ApiResult<GuideAnswer>> {
+  return withFallback(
+    () =>
+      request<GuideAnswer>(
+        "/ai/ask-guide",
+        {
+          method: "POST",
+          body: JSON.stringify({ locationId, question, history }),
+        },
+        GENERATION_TIMEOUT_MS,
+      ),
+    () => mockGuideAnswer(locationId, question),
+  );
 }
 
 export const apiBaseUrl = BASE_URL;

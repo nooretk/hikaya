@@ -52,7 +52,8 @@ def main(argv=None):
     story = sub.add_parser("story", help="generate a story for a location")
     story.add_argument("location_id")
     story.add_argument("--audience", default="general",
-                       choices=["student", "tourist", "child", "short", "general"])
+                       choices=["student", "tourist", "child", "short", "historian",
+                                "general"])
     story.add_argument("--tone", default="storytelling",
                        choices=["neutral", "educational", "emotional", "storytelling"])
     story.add_argument("--language", default="en")

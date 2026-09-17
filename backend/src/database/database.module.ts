@@ -4,7 +4,10 @@ import { DatabaseService } from './database.service';
 import {
   CONTRIBUTIONS_REPOSITORY,
   LOCATIONS_REPOSITORY,
+  MEDIA_REPOSITORY,
+  QUIZ_REPOSITORY,
   STORIES_REPOSITORY,
+  TIMELINE_REPOSITORY,
 } from './repositories/tokens';
 import {
   InMemoryLocationsRepository,
@@ -18,6 +21,18 @@ import {
   InMemoryContributionsRepository,
   PostgresContributionsRepository,
 } from './repositories/contributions.repository';
+import {
+  InMemoryMediaRepository,
+  PostgresMediaRepository,
+} from './repositories/media.repository';
+import {
+  InMemoryTimelineRepository,
+  PostgresTimelineRepository,
+} from './repositories/timeline.repository';
+import {
+  InMemoryQuizRepository,
+  PostgresQuizRepository,
+} from './repositories/quiz.repository';
 
 /**
  * DatabaseModule
@@ -67,12 +82,39 @@ import {
           : new InMemoryContributionsRepository(),
       inject: [DatabaseService],
     },
+    {
+      provide: MEDIA_REPOSITORY,
+      useFactory: (db: DatabaseService) =>
+        db.isAvailable()
+          ? new PostgresMediaRepository(db)
+          : new InMemoryMediaRepository(),
+      inject: [DatabaseService],
+    },
+    {
+      provide: TIMELINE_REPOSITORY,
+      useFactory: (db: DatabaseService) =>
+        db.isAvailable()
+          ? new PostgresTimelineRepository(db)
+          : new InMemoryTimelineRepository(),
+      inject: [DatabaseService],
+    },
+    {
+      provide: QUIZ_REPOSITORY,
+      useFactory: (db: DatabaseService) =>
+        db.isAvailable()
+          ? new PostgresQuizRepository(db)
+          : new InMemoryQuizRepository(),
+      inject: [DatabaseService],
+    },
   ],
   exports: [
     DatabaseService,
     LOCATIONS_REPOSITORY,
     STORIES_REPOSITORY,
     CONTRIBUTIONS_REPOSITORY,
+    MEDIA_REPOSITORY,
+    TIMELINE_REPOSITORY,
+    QUIZ_REPOSITORY,
   ],
 })
 export class DatabaseModule {}

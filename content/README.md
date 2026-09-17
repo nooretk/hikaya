@@ -12,10 +12,14 @@ content/
 ├── oldCity.md                      # full content file — Old City of Jerusalem (Arabic)
 ├── beth.md                         # full content file — Bethlehem (Arabic)
 ├── sebastia.md                     # full content file — Sebastia (Arabic)
-└── ai-ready/
-    ├── old-city-jerusalem-summary.md
-    ├── bethlehem-summary.md
-    └── sebastia-summary.md
+├── ai-ready/
+│   ├── old-city-jerusalem-summary.md
+│   ├── bethlehem-summary.md
+│   └── sebastia-summary.md
+├── media/
+│   └── media.json              # verified photographs, credits and licences
+└── quiz/
+    └── quiz.json               # comprehension questions and their sources
 ```
 
 ## The Four Kinds of Material in This Folder
@@ -52,17 +56,41 @@ Each summary has a fixed shape so the AI service can parse it:
 (`jerusalem`, `bethlehem`, `sebastia`), because that is how the backend picks the right
 summary when it calls the AI service.
 
-### 3. Media links
+### 3. Media (`media/media.json`)
 
-No image, audio, or video files are stored in this repository. Media is referenced by
-URL only, in the "مراجع الوسائط / Media references" section at the end of each full
-content file. Preference order for media sources:
+No image, audio, or video files are stored in this repository. `media/media.json`
+records the photographs shown in the galleries by URL, and it is the single source
+of truth for them: `ai/scripts/export_seed_data.py` generates the database, backend
+and frontend copies from it.
 
-1. Wikimedia Commons category pages (clear licensing, stable URLs)
-2. Official institution galleries (UNESCO, Palestinian Ministry of Tourism and Antiquities)
-3. Anything else — only with the licence recorded next to it
+Every entry carries:
 
-When adding media, record the source, the licence, and the date accessed.
+| Field | Why it is required |
+|---|---|
+| `subject` | What the photograph actually shows, e.g. `Damascus Gate` |
+| `caption` | One sentence for the gallery |
+| `era` | `modern` or `historical` — an 1880s plate and a phone photo say different things |
+| `pair_role` | `cover`, or `before`/`after` for a then-and-now comparison |
+| `credit`, `license`, `license_url` | These are other people's photographs, used under licences that require attribution |
+| `date` | The capture date the source gives, ranges included |
+| `source_url` | The Commons page, so anyone can check |
+
+The export script refuses to build if an entry lacks a credit or a licence, if its
+declared `era` contradicts its date, or if a before/after pair shows two different
+subjects. Preference order for sources: Wikimedia Commons (clear licensing, stable
+URLs), then official institution galleries, then anything else with its licence
+recorded.
+
+**Check the photograph before adding it.** The metadata says what a file is called,
+not what it depicts; the current set was reviewed on a contact sheet, and one image
+was still caught later carrying the wrong era.
+
+### 3b. Quiz (`quiz/quiz.json`)
+
+Comprehension questions shown after a story. Each needs `options`, an
+`answer_index`, an `explanation`, and a `source_note` naming where in the reviewed
+content the answer comes from — a quiz that only says "correct" is asking to be
+trusted.
 
 ### 4. Source notes
 
@@ -118,9 +146,12 @@ See [`ai/api-contract.md`](../ai/api-contract.md) for the exact JSON exchanged, 
 
 1. Write the full content file in `content/`, ending with the sources and media section.
 2. Write the AI-ready summary in `content/ai-ready/<slug>-summary.md`, keeping the eight
-   sections and the frontmatter.
+   sections and the frontmatter. The timeline table becomes the location's timeline.
 3. Use the same `location_id` in `database/seed.sql`.
-4. Run `python3 ai/scripts/generate_examples.py` to produce a sample story and confirm the
+4. Add photographs to `content/media/media.json` and questions to `content/quiz/quiz.json`.
+5. Run `python3 ai/scripts/export_seed_data.py` to regenerate the three seeds — it
+   validates as it goes.
+6. Run `python3 ai/scripts/generate_examples.py` to produce a sample story and confirm the
    summary parses correctly.
 
 ## Sprint 2 Status

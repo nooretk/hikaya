@@ -20,6 +20,8 @@ BEGIN;
 -- -----------------------------------------------------------------------------
 -- Clean slate (child tables first because of the foreign keys)
 -- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS quiz_questions CASCADE;
+DROP TABLE IF EXISTS timeline_events CASCADE;
 DROP TABLE IF EXISTS contributions CASCADE;
 DROP TABLE IF EXISTS media CASCADE;
 DROP TABLE IF EXISTS stories CASCADE;
@@ -162,19 +164,86 @@ CREATE TRIGGER stories_set_updated_at
 -- -----------------------------------------------------------------------------
 -- media  (media metadata - the files themselves are never stored in this repo)
 -- -----------------------------------------------------------------------------
+-- Every row must carry `license` and `credit`. The gallery displays both next to
+-- the image, so an asset without them cannot be shown honestly and must not be
+-- added. Rows are generated from content/media/media.json - see
+-- ai/scripts/export_seed_data.py.
+--
+-- `era` splits historical photography from present-day photography, and
+-- `pair_role` marks the two halves of a before/after comparison: exactly one
+-- 'before' and one 'after' per location, of the same subject.
+-- -----------------------------------------------------------------------------
 CREATE TABLE media (
   id          TEXT        PRIMARY KEY DEFAULT gen_random_uuid()::text,
   location_id TEXT        NOT NULL REFERENCES locations (id) ON DELETE CASCADE,
   type        TEXT        NOT NULL CHECK (type IN ('image', 'audio', 'video', 'document')),
   url         TEXT        NOT NULL,
+  thumb_url   TEXT,
+  subject     TEXT,       -- the landmark shown, e.g. 'Damascus Gate'
   description TEXT,
+  era         TEXT        NOT NULL DEFAULT 'modern'
+                          CHECK (era IN ('modern', 'historical')),
+  pair_role   TEXT        CHECK (pair_role IN ('cover', 'before', 'after')),
+  credit      TEXT,       -- photographer or holding institution
   license     TEXT,       -- recorded for every asset, see content/README.md
+  license_url TEXT,
+  captured_at TEXT,       -- free text: sources give ranges like 'between 1934 and 1939'
   source_url  TEXT,       -- page the asset was taken from
+  sort_order  INTEGER     NOT NULL DEFAULT 0,
   uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX media_location_idx ON media (location_id);
 CREATE INDEX media_type_idx     ON media (type);
+CREATE INDEX media_pair_idx     ON media (location_id, pair_role);
+
+-- -----------------------------------------------------------------------------
+-- timeline_events
+-- -----------------------------------------------------------------------------
+-- The historical timeline shown on a location page. Rows are generated from the
+-- reviewed summaries in content/ai-ready/ by ai/scripts/export_seed_data.py, so
+-- the content files stay the single source of truth for what the timeline says.
+--
+-- `is_tradition` marks an entry that comes from religious or oral tradition
+-- rather than documented history. The UI labels those differently - the same
+-- fact/tradition separation the content files and the AI module enforce.
+-- -----------------------------------------------------------------------------
+CREATE TABLE timeline_events (
+  id           TEXT        PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  location_id  TEXT        NOT NULL REFERENCES locations (id) ON DELETE CASCADE,
+  period_label TEXT        NOT NULL,   -- e.g. '586 BCE', 'Umayyad era (661-750 CE)'
+  description  TEXT        NOT NULL,
+  -- Approximate year for ordering only; negative is BCE. Never displayed.
+  sort_year    INTEGER     NOT NULL,
+  sort_order   INTEGER     NOT NULL DEFAULT 0,
+  is_tradition BOOLEAN     NOT NULL DEFAULT FALSE,
+  source_file  TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX timeline_location_idx ON timeline_events (location_id, sort_order);
+
+-- -----------------------------------------------------------------------------
+-- quiz_questions
+-- -----------------------------------------------------------------------------
+-- Short comprehension questions shown after a story. Every question must carry
+-- `source_note` naming where the answer comes from in the reviewed content, so a
+-- reader who disagrees can go and check.
+-- -----------------------------------------------------------------------------
+CREATE TABLE quiz_questions (
+  id            TEXT        PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  location_id   TEXT        NOT NULL REFERENCES locations (id) ON DELETE CASCADE,
+  question      TEXT        NOT NULL,
+  options       TEXT[]      NOT NULL,
+  answer_index  INTEGER     NOT NULL CHECK (answer_index >= 0),
+  explanation   TEXT        NOT NULL,
+  source_note   TEXT        NOT NULL,
+  sort_order    INTEGER     NOT NULL DEFAULT 0,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT quiz_answer_in_range CHECK (answer_index < array_length(options, 1))
+);
+
+CREATE INDEX quiz_location_idx ON quiz_questions (location_id, sort_order);
 
 -- -----------------------------------------------------------------------------
 -- contributions
@@ -185,6 +254,9 @@ CREATE INDEX media_type_idx     ON media (type);
 -- -----------------------------------------------------------------------------
 CREATE TABLE contributions (
   id                TEXT        PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  -- Short human-readable code given to the contributor so they can check the
+  -- review status later without an account, e.g. 'HK-7Q4M2X'.
+  reference_code    TEXT        UNIQUE,
   location_id       TEXT        NOT NULL REFERENCES locations (id) ON DELETE CASCADE,
   user_id           TEXT        REFERENCES users (id) ON DELETE SET NULL,
   category_id       TEXT        REFERENCES categories (id) ON DELETE SET NULL,
@@ -193,6 +265,7 @@ CREATE TABLE contributions (
   contributor_name  TEXT,
   contributor_email TEXT,
   media_url         TEXT,
+  media_type        TEXT        CHECK (media_type IN ('image', 'audio', 'video')),
   status            TEXT        NOT NULL DEFAULT 'pending_review'
                                 CHECK (status IN ('pending_review', 'approved', 'rejected')),
   review_notes      TEXT,
@@ -200,7 +273,8 @@ CREATE TABLE contributions (
   submitted_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX contributions_location_idx ON contributions (location_id);
-CREATE INDEX contributions_status_idx   ON contributions (status);
+CREATE INDEX contributions_location_idx  ON contributions (location_id);
+CREATE INDEX contributions_status_idx    ON contributions (status);
+CREATE INDEX contributions_reference_idx ON contributions (reference_code);
 
 COMMIT;

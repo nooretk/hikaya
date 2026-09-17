@@ -98,6 +98,9 @@ export class AiService {
           question: dto.question,
           location_id: dto.locationId,
           language: dto.language ?? 'en',
+          // Without this a follow-up like "and when?" has no keywords of its
+          // own and the guide correctly, but uselessly, refuses to answer.
+          history: dto.history ?? [],
         }),
       );
       return {

@@ -9,7 +9,9 @@ import { Story } from '../entities/story.entity';
  * is unreachable, the in-memory repositories serve this data instead, so every
  * endpoint still returns real seeded content rather than placeholders.
  *
- * Keep this file and database/seed.sql in step when either changes.
+ * Keep this file and database/seed.sql in step when either changes. The
+ * The timeline, media and quiz seeds are NOT here: they are generated into
+ * generated-data.ts from the content files by ai/scripts/export_seed_data.py.
  */
 
 export const SEED_LOCATIONS: Location[] = [
@@ -24,7 +26,7 @@ export const SEED_LOCATIONS: Location[] = [
     description:
       'One of the oldest continuously inhabited cities in the world. Roughly 0.9 km² inside Ottoman walls built under Sultan Suleiman the Magnificent, with eight historic gates, four quarters, and more than 220 historical monuments. Inscribed on the UNESCO World Heritage List in 1981.',
     coverImageUrl:
-      'https://images.unsplash.com/photo-1542856391-010fb87dcfed?auto=format&fit=crop&q=80&w=1200',
+      'https://commons.wikimedia.org/wiki/Special:FilePath/18405-Jerusalem-Pano_%2828887202772%29.jpg?width=1600',
     contentFile: 'content/oldCity.md',
     aiSummaryFile: 'content/ai-ready/old-city-jerusalem-summary.md',
     categories: [
@@ -45,7 +47,7 @@ export const SEED_LOCATIONS: Location[] = [
     description:
       'A historic Palestinian city about 10 km south of Jerusalem, roughly 775 m above sea level. Known worldwide for the Church of the Nativity, completed around 339 CE and World Heritage listed in 2012, and for its olive-wood and mother-of-pearl crafts.',
     coverImageUrl:
-      'https://images.unsplash.com/photo-1590076212879-11ef849646b5?auto=format&fit=crop&q=80&w=1200',
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Church_of_the_Nativity%2C_2019_%2801%29.jpg?width=1600',
     contentFile: 'content/beth.md',
     aiSummaryFile: 'content/ai-ready/bethlehem-summary.md',
     categories: [
@@ -66,7 +68,7 @@ export const SEED_LOCATIONS: Location[] = [
     description:
       'An archaeological site about 12 km north-west of Nablus on a hill some 440 m above sea level. Capital of the northern Kingdom of Israel in the 9th century BCE, rebuilt by Herod the Great in 27 BCE and renamed after Emperor Augustus. Holds one of the best-preserved Roman streets in Palestine.',
     coverImageUrl:
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=1200',
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Columned_street_-_panoramio.jpg?width=1600',
     contentFile: 'content/sebastia.md',
     aiSummaryFile: 'content/ai-ready/sebastia-summary.md',
     categories: [
@@ -165,6 +167,7 @@ export const SEED_STORIES: Story[] = [
 export const SEED_CONTRIBUTIONS: Contribution[] = [
   {
     id: 'contribution-sample-1',
+    referenceCode: 'HK-SAMPLE1',
     locationId: 'jerusalem',
     userId: null,
     categoryId: 'cat-cultural',
@@ -180,6 +183,7 @@ export const SEED_CONTRIBUTIONS: Contribution[] = [
   },
   {
     id: 'contribution-sample-2',
+    referenceCode: 'HK-SAMPLE2',
     locationId: 'bethlehem',
     userId: null,
     categoryId: 'cat-cultural',

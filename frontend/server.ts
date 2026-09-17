@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import net from "net";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import { GoogleGenAI, GenerateVideosOperation } from "@google/genai";
@@ -454,6 +455,65 @@ if (!isProd) {
   });
 }
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`[Hikaya Server] Running on http://localhost:${PORT}`);
-});
+/** Can something already be reached on this host and port? */
+function isInUse(host: string, port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = net.createConnection({ host, port, timeout: 700 });
+    const done = (inUse: boolean) => {
+      socket.destroy();
+      resolve(inUse);
+    };
+    socket.once("connect", () => done(true));
+    socket.once("error", () => done(false));
+    socket.once("timeout", () => done(false));
+  });
+}
+
+/**
+ * Is this port genuinely free on every address `localhost` might resolve to?
+ *
+ * Checked by *connecting*, not by binding, because binding does not detect the
+ * case that actually bites here. Another dev server holding `[::1]:5173` and
+ * this one binding the wildcard both succeed - macOS allows a wildcard bind
+ * alongside a specific-address bind - and then the more specific listener wins
+ * every `localhost` request, because macOS resolves `localhost` to `::1` first.
+ * The result is this server logging "running on localhost:5173" while the
+ * browser is served somebody else's project entirely.
+ *
+ * Both loopback families are probed: whichever one `localhost` lands on has to
+ * be ours, or the address printed below is a lie.
+ */
+async function isPortAvailable(port: number): Promise<boolean> {
+  const busy = await Promise.all([
+    isInUse("127.0.0.1", port),
+    isInUse("::1", port),
+  ]);
+  return !busy.some(Boolean);
+}
+
+async function resolvePort(preferred: number, attempts = 10): Promise<number> {
+  for (let candidate = preferred; candidate < preferred + attempts; candidate += 1) {
+    if (await isPortAvailable(candidate)) {
+      if (candidate !== preferred) {
+        console.warn(
+          `[Hikaya Server] Port ${preferred} is already in use - using ${candidate} instead.`,
+        );
+      }
+      return candidate;
+    }
+  }
+  throw new Error(
+    `Ports ${preferred}-${preferred + attempts - 1} are all in use. ` +
+      `Free one, or set PORT in frontend/.env.`,
+  );
+}
+
+void (async () => {
+  const port = await resolvePort(PORT);
+
+  // No host argument: Node binds dual-stack, so `localhost` reaches this
+  // server whether it resolves to 127.0.0.1 or ::1.
+  app.listen(port, () => {
+    console.log(`[Hikaya Server] Running on http://localhost:${port}`);
+  });
+})();

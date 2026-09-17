@@ -1,10 +1,11 @@
 import React from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { Compass, Heart, Home, Info, MapPin, PenLine } from "lucide-react";
+import { Compass, Heart, Home, Info, MapPin, PenLine, Waypoints } from "lucide-react";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: Home, end: true },
   { to: "/map", label: "Map", icon: MapPin, end: false },
+  { to: "/constellation", label: "Connections", icon: Waypoints, end: false },
   { to: "/contribute", label: "Contribute", icon: PenLine, end: false },
   { to: "/explorer", label: "Explorer", icon: Compass, end: false },
   { to: "/about", label: "About", icon: Info, end: false },
